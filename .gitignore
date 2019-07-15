@@ -1,0 +1,4 @@
+fdt/.env
+media/signatures/
+*.pyc
+*/__pycache__/*
