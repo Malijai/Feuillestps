@@ -1,0 +1,45 @@
+{% extends 'fdt_base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+
+<form action="" method="post">
+{% csrf_token %}
+    <h2>{{ user.first_name }} {{ user.last_name }} </h2>
+    <p>Date du debut de la periode: <input type="text" name="date" id="datepicker"></p>
+
+    <div class="w3-row w3-theme-l3 ">
+        <div class="w3-half w3-center">
+            <table>
+                <tr>
+                    <td colspan="3">Choisir le projet associé à cette feuille de temps</td>
+                    <td><select name="contratid" >
+                        <option value="">Choisir le projet / contrat</option>
+                        {% for contrat in user.contratippm_set.all %}
+                            <option value="{{contrat.id}}">{{contrat.numcontrat}} - {{contrat.nomprojet}}</option>
+                        {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Semaine 1</th><th>Heures travaillées</th><th>Semaine 2</th><th>Heures travaillées</th>
+                </tr>
+            {% for clef, jour in jours.items %}
+                <tr>
+                    {% for semaine in jour.semaines %}
+                        <td>{{ jour.nom }}</td>
+                        <td><input type="number" value="0" min="0" max="10" step="0.5" name="{{semaine}}_{{clef}}"></td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </table>
+        </div>
+        <div class="w3-quarter w3-center">
+            <h3>Envoyez la feuille ainsi remplie à <a href="mailto:ml.robillard.ippm@ssss.gouv.qc.ca?subject=Feuille de temps {{ user.last_name }} {{ user.first_name }}"> Marie-Lou Robillard</a> et n'oubliez pas de mettre votre coordonnateur en cc</h3>
+            <button type="submit" class="btn-default">Imprimer la feuille de temps</button>
+        </div>
+    </div>
+</form>
+
+{% endblock content %}

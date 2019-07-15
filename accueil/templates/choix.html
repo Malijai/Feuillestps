@@ -1,0 +1,16 @@
+{% extends 'fdt_base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+
+    <h2>Bienvenue {{ user.first_name }} {{ user.last_name }}</h2>
+   {% if RA %}
+        <h3><a href="{% url 'do_fdt' %}" class="btn-default">Remplir la feuille de temps</a></h3>
+   {% endif %}
+   {% if ADMIN %}
+        <h3><a href="{% url 'listeassistants' %}" class="btn-default">Remplir les infos d'un assitant (numéro de contrat, signature etc)</a></h3>
+   {% endif %}
+
+{% endblock content %}
+

@@ -1,0 +1,66 @@
+{% load i18n %}
+{% load static %}
+
+<html>
+    <head>
+        <title>INPLPP</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="{% static 'accueil/w3.css' %}">
+        <link rel="stylesheet" href="{% static 'accueil/w3-theme-maison.css' %}">
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    </head>
+<body class="w3-theme-l5">
+
+<div class="principal w3-theme-l5">
+<!-- Header -->
+<!-- <header class="w3-container w3-theme" id="myHeader"> -->
+<header class="w3-row w3-theme-d3" id="myHeader">
+    <div class="w3-quarter">
+        <a href="{% url 'logout' %}" class="w3-button w3-theme-action"> Logout</a>
+    </div>
+
+    <div class="w3-half w3-center">
+        <h4>Gestionnaire des feuilles de temps des assistants de recherche de l'INPLPP</h4>
+    </div>
+ <script>
+  $( function() {
+     $("input[name*='date']").datepicker({ dateFormat: 'dd/mm/yy' });
+  } );
+  </script>
+
+</header>
+
+<div class="w3-container w3-padding">
+{% if messages %}
+    {% for msg in messages %}
+        <div class="w3-orange" role="alert">
+            {{msg.message}}
+        </div>
+    {% endfor %}
+{% endif %}
+    {% block content %}
+
+    {% endblock %}
+</div>
+
+<!-- Footer -->
+
+</div>
+
+<footer class="w3-container w3-theme-d5 footerw3">
+        <h5>Projet réalisé en  <img src="/static/accueil/django-logo-negative.png" height="32px">
+        disponible ici <a href="https://github.com/Malijai/" class="date" ><img src="/static/accueil/GitHub-Mark-Light-32px.png"></a>
+        Thème inspiré de <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a> </h5>
+  <div style="position:relative;bottom:30px;" class="w3-tooltip w3-right">
+    <span class="w3-text w3-theme-light w3-padding">Haut</span>
+    <a class="w3-text-white" href="#myHeader"><span class="w3-xlarge">
+    <i class="fa fa-chevron-circle-up"></i></span></a>
+  </div>
+</footer>
+
+</body>
+</html>
+

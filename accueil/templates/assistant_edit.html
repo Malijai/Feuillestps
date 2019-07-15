@@ -1,0 +1,61 @@
+{% extends 'fdt_base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+
+<div class="principal">
+{% if messages %}
+    {% for msg in messages %}
+        <div class="w3-orange" role="alert">
+        {{msg.message}}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<form method="POST" class="Entree-form" enctype="multipart/form-data">
+    <div class="w3-row">
+        <div class="w3-half w3-center">
+            <h4>Pour sélectionner la signature demander aux assistants d'utiliser ce site et d'envoyer seulement la signature en jpg.
+            https://www194.lunapic.com/editor/</h4>
+                {% csrf_token %}
+                <table class="w3-table-all">
+                    {{ form.as_table }}
+
+                   {{ employe.as_table }}
+                </table>
+        </div>
+    </div>
+    <div class="w3-center">
+    {{ contrat_formset.management_form }}
+    <h3 class="w3-amber">Différents contrats</h3>
+        <table class="w3-table-all w3-tiny w3-hoverable">
+            <tr class="w3-dark-grey">
+                <th></th>
+                <th>Numéro du contrat</th>
+                <th>Budget #</th>
+                <th>Nom du projet</th>
+                <th>Heures max</th>
+                <th>Date debut</th>
+                <th>Dated fin</th>
+            </tr>
+            {% for contrat in contrat_formset %}
+                <tr>
+                <td>{{ contrat.id }}</td>
+                <td>{{ contrat.numcontrat }}</td>
+                <td>{{ contrat.numbudget }}</td>
+                <td>{{ contrat.nomprojet }}</td>
+                <td>{{ contrat.maxheures }}</td>
+                <td>{{ contrat.datedebut }}</td>
+                <td>{{ contrat.datefin }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+        <button type="submit" class="w3-button w3-amber">Save</button>
+        <button type="submit" class="w3-button w3-khaki " name="Savesurplace">Save and continue</button> ('Save and continue' enregistre et ajoute 2 lignes pour ajouter des contrats)
+</form>
+</div>
+
+{% endblock content %}
+

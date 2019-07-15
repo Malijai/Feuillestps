@@ -1,0 +1,35 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from django import forms
+from .models import User, Contratippm, Employe
+from django.forms import inlineformset_factory
+
+
+class EmployeForm(forms.ModelForm):
+    class Meta:
+        model = Employe
+        fields = ('numeemploye','signature')
+        exclude = ()
+
+
+class ContratippmForm(forms.ModelForm):
+    class Meta:
+        model = Contratippm
+        fields = ('numcontrat','numbudget', 'nomprojet','maxheures','datedebut','datefin')
+        help_texts = {
+            'datedebut': 'jj/mm/aaaa',
+            'datefin': 'jj/mm/aaaa',
+        }
+        exclude = ()
+
+
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['last_name', 'first_name', 'email' ]
+        exclude = ()
+
+
+ContratFormSet = inlineformset_factory(User, Contratippm, form= ContratippmForm,
+                                         extra=2, can_delete=True)
+

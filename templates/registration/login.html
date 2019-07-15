@@ -1,0 +1,43 @@
+{% extends "fdt_base.html" %}
+{% load i18n %}
+
+{% block content %}
+
+{% if form.errors %}
+<p>Votre nom et mot de passe ne correspondent pas. Réessayez</p>
+{% endif %}
+
+{% if next %}
+    {% if user.is_authenticated %}
+    <p>Your account doesn't have access to this page. To proceed,
+    please login with an account that has access.</p>
+    {% else %}
+    <p>Enregistrez-vous pour accéder à cette page</p>
+    {% endif %}
+{% endif %}
+<h4>Vous devez être connecté pour accéder au module d'entrée des heures travaillées</h4>
+
+<form method="post" action="{% url 'login' %}">
+{% csrf_token %}
+<table>
+    <tr>
+      <td>{{ form.username.label_tag }}</td>
+      <td>{{ form.username }}</td>
+    </tr>
+    <tr>
+      <td>{{ form.password.label_tag }}</td>
+      <td>{{ form.password }}</td>
+    </tr>
+
+    <tr>
+      <td></td><td><input type="submit" value="login" class="btn-default"/>
+      <input type="hidden" name="next" value="" /></td>
+    </tr>
+</table>
+</form>
+
+{# Assumes you setup the password_reset view in your URLconf #}
+<p class="espace"><a href="{% url 'password_reset' %}">Mot de passe perdu?</a>
+</p>
+
+{% endblock %}

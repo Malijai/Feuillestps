@@ -1,0 +1,13 @@
+{% extends "fdt_base.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="post">
+    <p class="espace">Délogué!</p>
+    <p class="espace">
+        <a href="{% url 'login'%}" class="btn-default">Se reloguer</a>
+    </p>
+</div>
+
+{% endblock %}
