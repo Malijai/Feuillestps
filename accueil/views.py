@@ -12,7 +12,7 @@ from reportlab.lib.pagesizes import letter
 from django.contrib.auth.decorators import login_required
 import datetime
 import unicodedata
-
+from textwrap import wrap
 
 NOM_FICHIER_PDF = "FeuilleTemps_"
 PAGE_INFO = "Feuilles de temps - Date d'impression : " + datetime.datetime.now().strftime('%d/%m/%Y')
@@ -92,7 +92,7 @@ def fdetemps(request):
         5: {'nom': "Vendredi", 'semaines': semaines},
         6: {'nom': "Samedi", 'semaines': semaines},
         }
-    img = ImageReader('accueil/Feuilledetemps.jpg')
+    img = ImageReader('accueil/Feuilledetemps2.jpg')
     x = 5
     y = 5
     w = 600
@@ -111,6 +111,7 @@ def fdetemps(request):
 
         date1 = request.POST.get('date')
         contratid = request.POST.get('contratid')
+        commentaire = request.POST.get('commentaire')
         if contratid == "":
             messages.add_message(request, messages.ERROR, "Vous devez choisir un numéro de contrat")
             return render(request, 'fdt.html', {'jours': jours})
@@ -179,6 +180,7 @@ def fdetemps(request):
         doc.drawString(450, 645, 'PAIE : ' + str(quinzaine))
         doc.drawString(420, y_sign, date_debut)
         doc.drawString(515, y_sign, date_fin)
+        doc.drawString(515, 115, date_fin)
 
         for semaine in semaines:
             temps_semaine = 0
@@ -200,8 +202,15 @@ def fdetemps(request):
                     return render(request, 'fdt.html', {'jours': jours})
 
         doc.drawString(515, y_heures, str(somme_temps))
+
+        textobject = doc.beginText(60, 160)
+        wraped_text = "\n".join(wrap(commentaire, 90))  # 80 is line width
+        for line in wraped_text.splitlines(False):
+            textobject.textLine(line.rstrip())
+        doc.drawText(textobject)
+
         Tempsfacture.objects.update_or_create(user=request.user, periode=quinzaine,
-                                              defaults={'heures': somme_temps, 'contrat': detailcontrat}
+                                              defaults={'heures': somme_temps, 'contrat': detailcontrat, 'commentaire': commentaire}
                                               )
         doc.save()
         fs = FileSystemStorage("/tmp")

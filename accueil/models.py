@@ -29,6 +29,7 @@ class Tempsfacture(models.Model):
     periode = models.IntegerField(verbose_name="Numero de la periode")
     heures = models.CharField(max_length=30, verbose_name="Nb d'heures facturées dans la période", null=True, blank=True)
     contrat = models.ForeignKey(Contratippm, on_delete=models.DO_NOTHING)
+    commentaire =  models.CharField(max_length=250, null=True, blank=True)
 
     class Meta:
         ordering = ['user', 'periode']
