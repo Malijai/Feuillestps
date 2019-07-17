@@ -92,7 +92,7 @@ def fdetemps(request):
         5: {'nom': "Vendredi", 'semaines': semaines},
         6: {'nom': "Samedi", 'semaines': semaines},
         }
-    img = ImageReader('accueil/Feuilledetemps2.jpg')
+    img = ImageReader('media/Feuilledetemps2.jpg')
     x = 5
     y = 5
     w = 600
