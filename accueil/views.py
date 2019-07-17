@@ -22,7 +22,7 @@ DATE = datetime.datetime.now().strftime('%Y %b %d')
 
 @login_required(login_url=settings.LOGIN_URI)
 def listeassistants(request):
-    assistants = Role.objects.filter(role=1).order_by('user__first_name')
+    assistants = Role.objects.filter(role=1).order_by('user__last_name')
     return render(request, 'liste.html', {'RAs': assistants})
 
 
