@@ -29,14 +29,22 @@ def listeassistants(request):
 @login_required(login_url=settings.LOGIN_URI)
 def assistant_edit(request, pk):
     assistant = User.objects.get(pk=pk)
-    employe = Employe.objects.get(user=assistant)
+    try:
+        employe = Employe.objects.get(user=assistant)
+    except Employe.DoesNotExist:
+        employe = None
     if request.method == 'POST':
         assistant_form = UserForm(request.POST, instance=assistant)
-        employe_form = EmployeForm(request.POST, request.FILES, instance=employe)
+        if employe is not None:
+            employe_form = EmployeForm(request.POST, request.FILES, instance=employe)
+        else:
+            employe_form = EmployeForm(request.POST, request.FILES)
         if assistant_form.is_valid():
             assistant = assistant_form.save()
         if employe_form.is_valid():
-            employe_form.save()
+            entree = employe_form.save(commit=False)
+            entree.user = User.objects.get(pk=pk)
+            entree.save()
         contrat_formset = ContratFormSet(request.POST, request.FILES, instance=assistant)
         if contrat_formset.is_valid():
             contrat_formset.save()
@@ -121,7 +129,7 @@ def fdetemps(request):
             return render(request, 'fdt.html', {'jours': jours})
 
         detailcontrat = Contratippm.objects.get(pk=contratid)
-        jour, mois, an = date1.split('/')
+        an, mois, jour = date1.split('-')
         date_rentree = datetime.date(int(an), int(mois), int(jour))
         semaine = date_rentree.strftime("%U")
         # Week number of the year (Sunday as the first day of the week) as a zero padded decimal number.
