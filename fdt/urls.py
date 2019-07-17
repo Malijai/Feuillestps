@@ -15,10 +15,12 @@ Including another URLconf
 """
 from django.conf import settings
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib.auth.views import LoginView
+from django.views.static import serve
+
 
 admin.site.site_header = settings.ADMIN_SITE_HEADER
 
@@ -30,4 +32,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', LoginView.as_view(), name='login', kwargs={'redirect_authenticated_user': True}),
     path('accueil/', include('accueil.urls')),
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
+    ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
