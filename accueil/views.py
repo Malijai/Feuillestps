@@ -29,7 +29,7 @@ def listeassistants(request):
 @login_required(login_url=settings.LOGIN_URI)
 def assistant_edit(request, pk):
     assistant = User.objects.get(pk=pk)
-    employe = Employe.objects.get(pk=pk)
+    employe = Employe.objects.get(user=assistant)
     if request.method == 'POST':
         assistant_form = UserForm(request.POST, instance=assistant)
         employe_form = EmployeForm(request.POST, request.FILES, instance=employe)
@@ -46,7 +46,8 @@ def assistant_edit(request, pk):
             else:
                 return redirect('listeassistants')
         else:
-            messages.error(request, "Il y a une erreur dans l'enregistrement de l'equipe ou de la documentation.")
+
+            messages.error(request, "Il y a une erreur dans l'enregistrement de l'assistant ou du contrat.")
             return redirect(assistant_edit, assistant.id)
     else:
         assistant_form = UserForm(instance=assistant)

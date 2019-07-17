@@ -17,8 +17,8 @@ class ContratippmForm(forms.ModelForm):
         model = Contratippm
         fields = ('numcontrat','numbudget', 'nomprojet','maxheures','datedebut','datefin')
         help_texts = {
-            'datedebut': 'jj/mm/aaaa',
-            'datefin': 'jj/mm/aaaa',
+            'datedebut': 'aaaa-mm-jj',
+            'datefin': 'aaaa-mm-jj',
         }
         exclude = ()
 
