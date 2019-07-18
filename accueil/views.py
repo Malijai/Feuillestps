@@ -178,7 +178,7 @@ def fdetemps(request):
         doc.drawString(330, y_sign, request.user.employe.numeemploye)
         doc.setFont('Helvetica', 12)
         doc.drawString(70, 750, 'No contrat : ' + detailcontrat.numcontrat)
-#        doc.drawString(290, 750, 'No budget : ' + request.user.contratippm.numbudget)
+        doc.drawString(400, 750, 'No budget : ' + detailcontrat.numbudget)
 
         if request.user.employe.signature:
             signature = ImageReader(request.user.employe.signature)
