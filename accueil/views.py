@@ -137,6 +137,7 @@ def fdetemps(request):
         debut = None
         if int(semaine) > 0:
             # les periodes de 2019 commencent les semaines paires
+            # les periodes de 2020 commencent les semaines impaires
             if int(semaine) % 2 > 0:            # si num semaine impair
                 d = str(an) + "-U" + semaine
                 debut = datetime.datetime.strptime(d + '-0', "%Y-U%U-%w")
@@ -144,7 +145,12 @@ def fdetemps(request):
                 semcorr = int(semaine) - 1
                 d = str(an) + "-U" + str(semcorr)
                 debut = datetime.datetime.strptime(d + '-0', "%Y-U%U-%w")
-
+            fin = debut + datetime.timedelta(days=13)
+            semaine_debut = debut.strftime("%U")
+            quinzaine = (int(semaine_debut) + 4) / 2
+        elif int(semaine) == 0:
+            d = str(an) + "-U" + semaine
+            debut = datetime.datetime.strptime(d + '-0', "%Y-U%U-%w")
             fin = debut + datetime.timedelta(days=13)
             semaine_debut = debut.strftime("%U")
             quinzaine = (int(semaine_debut) + 4) / 2
@@ -164,6 +170,11 @@ def fdetemps(request):
             quinzaine = int(quinzaine + 1)
         else:
             quinzaine = int(quinzaine)
+
+        if 26 < quinzaine <= 27:
+            quinzaine = 1
+        elif quinzaine > 27:
+            quinzaine = 2
 
         date_debut = debut.strftime("%d-%m-%Y")
         date_fin = fin.strftime("%d-%m-%Y")
