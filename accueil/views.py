@@ -228,9 +228,12 @@ def fdetemps(request):
         for line in wraped_text.splitlines(False):
             textobject.textLine(line.rstrip())
         doc.drawText(textobject)
-
+        debutperiode = debut.strftime("%Y-%m-%d")
         Tempsfacture.objects.update_or_create(user=request.user, periode=quinzaine,
-                                              defaults={'heures': somme_temps, 'contrat': detailcontrat, 'commentaire': commentaire}
+                                              defaults={'heures': somme_temps,
+                                                        'contrat': detailcontrat,
+                                                        'commentaire': commentaire,
+                                                        'debutperiode': debutperiode}
                                               )
         doc.save()
         fs = FileSystemStorage("/tmp")
@@ -240,3 +243,19 @@ def fdetemps(request):
         return response
     else:
         return render(request, 'fdt.html', {'jours': jours})
+
+
+@login_required(login_url=settings.LOGIN_URI)
+def bilan(request, pk, cid):
+    assistant = User.objects.get(pk=pk)
+    contrat = Contratippm.objects.get(pk=cid)
+    temps = Tempsfacture.objects.filter(user=assistant, contrat=contrat).order_by('created_at', 'id')
+
+    return render(request, "bilan.html", {'RA': assistant, 'contrat': contrat, 'temps': temps})
+
+
+@login_required(login_url=settings.LOGIN_URI)
+def listecontrats(request):
+    contrats = Contratippm.objects.all().order_by('datedebut')
+    assistants = Role.objects.filter(role=1).order_by('user__last_name')
+    return render(request, 'listecontrats.html', {'RAs': assistants, 'contrats': contrats})

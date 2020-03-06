@@ -19,6 +19,7 @@ class Contratippm(models.Model):
     maxheures = models.CharField(max_length=30, verbose_name="Nb maximum d'heures par semaine", null=True, blank=True)
     datedebut = models.DateField(verbose_name="Date du debut du contrat")
     datefin = models.DateField(verbose_name="Date de fin du contrat")
+    tauxhoraire = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Taux horaire pour ce contrat")
 
     def __str__(self):
         return '{0} - {1}'.format(self.numcontrat, self.nomprojet)
@@ -30,6 +31,8 @@ class Tempsfacture(models.Model):
     heures = models.CharField(max_length=30, verbose_name="Nb d'heures facturées dans la période", null=True, blank=True)
     contrat = models.ForeignKey(Contratippm, on_delete=models.DO_NOTHING)
     commentaire =  models.CharField(max_length=250, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    debutperiode = models.DateField(default="2000-01-01")
 
     class Meta:
         ordering = ['user', 'periode']

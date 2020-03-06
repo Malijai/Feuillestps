@@ -1,0 +1,62 @@
+{% load i18n %}
+{% load static %}
+
+<html>
+    <head>
+        <title>INPLPP</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="{% static 'accueil/w3.css' %}">
+        <link rel="stylesheet" href="{% static 'accueil/w3-theme-maison.css' %}">
+
+    </head>
+<body class="w3-theme-l5">
+
+<header class="w3-row w3-theme-d3" id="myHeader">
+
+    <div class="w3-quarter">
+        <a href="{% url 'logout' %}" class="w3-button w3-theme-action"> Logout</a>
+    </div>
+
+    <div class="w3-half w3-center">
+        <h4>INPLPP -  Feuilles de temps</h4>
+    </div>
+</header>
+
+<div class="principal">
+{% if messages %}
+    {% for msg in messages %}
+        <div class="alert alert-{{msg.level_tag}}" role="alert">
+        {{msg.message}}
+        </div>
+    {% endfor %}
+{% endif %}
+
+    <h2>Liste des assistants inscrits dans le système</h2>
+    <div class="w3-threequarter">
+        <table class="w3-table-all">
+           <tr><th> </th><th> </th><th> </th></tr>
+            {% for RA in RAs %}
+            <thead>
+            <tr class="w3-theme-l1"><th>{{ RA.user.last_name }}, {{ RA.user.first_name }}</th>
+                <th></th><th></th>
+                <th></th><th></th><th></th>
+            </tr>
+            </thead>
+            {% for contrat in contrats %}
+            {% if contrat.user.id == RA.user.id %}
+            <tr><td></td>
+                <td>{{ contrat.numcontrat }}</td>
+                <td>{{ contrat.nomprojet }}</td>
+                <td>{{ contrat.datedebut }}</td>
+                <td>{{ contrat.datefin }}</td>
+                <td><a href="{% url 'bilan' contrat.user.id contrat.id %}" class="btn-default">Voir détails</a> </td></tr>
+            {% endif %}
+            {% endfor %}
+            {% endfor %}
+        </table>
+    </div>
+</div>
+</body>
+</html>
+

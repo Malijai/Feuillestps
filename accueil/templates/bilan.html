@@ -1,0 +1,57 @@
+{% load i18n %}
+{% load mathfilters %}
+{% load static %}
+
+<html>
+    <head>
+        <title>INPLPP</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="{% static 'accueil/w3.css' %}">
+        <link rel="stylesheet" href="{% static 'accueil/w3-theme-maison.css' %}">
+
+    </head>
+<body class="w3-theme-l5">
+
+<header class="w3-row w3-theme-d3" id="myHeader">
+
+    <div class="w3-quarter">
+        <a href="{% url 'logout' %}" class="w3-button w3-theme-action"> Logout</a>
+    </div>
+
+    <div class="w3-half w3-center">
+        <h4>INPLPP -  Feuilles de temps</h4>
+    </div>
+</header>
+
+<div class="principal">
+{% if messages %}
+    {% for msg in messages %}
+        <div class="alert alert-{{msg.level_tag}}" role="alert">
+        {{msg.message}}
+        </div>
+    {% endfor %}
+{% endif %}
+<div class="w3-threequarter">
+<h2>{{ RA.last_name }}, {{ RA.first_name }}</h2>
+    <h4>Contrat # {{contrat.numcontrat}}, Budget # {{contrat.numbudget}} ({{contrat.nomprojet}})</h4>
+    <h4>Date de début : {{contrat.datedebut}}, Date de fin : {{contrat.datefin}}</h4>
+    <table class="w3-table-all">
+      <tr>
+        <th>Periode</th><th>Date début période</th>
+        <th>Temps facturé</th><th>Salaire versé</th>
+        <th>Commentaires</th>
+      </tr>
+    {% for temp in temps %}
+     <tr><td>{{temp.periode}}</td><td>{{temp.debutperiode}}</td>
+         <td>{{temp.heures}}</td>
+         <td>{{temp.heures|mul:contrat.tauxhoraire}}$</td>
+         <td>{{temp.commentaire}}</td>
+     </tr>
+    {% endfor %}
+    </table>
+</div>
+
+</body>
+</html>
+

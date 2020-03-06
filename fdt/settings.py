@@ -48,7 +48,7 @@ ROOT_URLCONF = 'fdt.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['./templates',],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -110,20 +110,16 @@ LOGIN_URL = config('LOGIN_URL')
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
 LANGUAGE_CODE = 'fr-fr'
-
 TIME_ZONE = 'America/Montreal'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, config('MEDIA_ROOT'))
+MEDIA_URL = config('MEDIA_URL')
 MEDIA_DATA = os.path.join(MEDIA_ROOT, 'databases')
 MEDIA_DATAURL = MEDIA_URL + 'databases/'
 

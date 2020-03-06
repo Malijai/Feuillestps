@@ -37,7 +37,9 @@
                 <th>Nom du projet</th>
                 <th>Heures max</th>
                 <th>Date debut</th>
-                <th>Dated fin</th>
+                <th>Date de fin</th>
+                <th>Taux horaire</th>
+                <th>Charges</th>
             </tr>
             {% for contrat in contrat_formset %}
                 <tr>
@@ -48,6 +50,8 @@
                 <td>{{ contrat.maxheures }}</td>
                 <td>{{ contrat.datedebut }}</td>
                 <td>{{ contrat.datefin }}</td>
+                <td>{{ contrat.tauxhoraire }}</td>
+                <td>{{ contrat.charges }}</td>
                 </tr>
             {% endfor %}
         </table>
