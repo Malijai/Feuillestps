@@ -1,0 +1,34 @@
+{% extends 'fdt_base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+
+<div class="principal">
+{% if messages %}
+    {% for msg in messages %}
+        <div class="w3-orange" role="alert">
+        {{msg.message}}
+        </div>
+    {% endfor %}
+{% endif %}
+   <div class="w3-row w3-theme-d3">
+         <div class="w3-quarter">
+            <a href="{% url 'choix' %}" class="w3-button w3-amber">Retour à l'accueil</a>
+        </div>
+   </div>
+<form method="POST" class="projet-form">
+    <div class="w3-row">
+        <div class="w3-half w3-center">
+            {% csrf_token %}
+            <table class="w3-table-all">
+            {{ form.as_table }}
+            </table>
+        </div>
+    </div>
+    <button type="submit" class="w3-button w3-amber">Save</button>
+</form>
+</div>
+
+{% endblock content %}
+

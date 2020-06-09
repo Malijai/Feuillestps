@@ -3,8 +3,8 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 from django.http import HttpResponse
 from django.contrib import messages
-from .models import Tempsfacture, Contratippm, Role, User, Employe
-from .forms import ContratFormSet, UserForm, EmployeForm
+from .models import Tempsfacture, Contratippm, Role, User, Employe, Projet, Periodes, Charges
+from .forms import ContratFormSet, UserForm, EmployeForm, ProjetForm
 from reportlab.pdfgen.canvas import Canvas
 from django.core.files.storage import FileSystemStorage
 from reportlab.lib.utils import ImageReader
@@ -13,6 +13,9 @@ from django.contrib.auth.decorators import login_required
 import datetime
 import unicodedata
 from textwrap import wrap
+from django.db.models import Q, Sum, Count
+import decimal
+
 
 NOM_FICHIER_PDF = "FeuilleTemps_"
 PAGE_INFO = "Feuilles de temps - Date d'impression : " + datetime.datetime.now().strftime('%d/%m/%Y')
@@ -84,8 +87,8 @@ def choix(request):
 
     return render(request, "choix.html",
                           {
-                            'RA': ra,
-                            'ADMIN': admin
+                          'RA': ra,
+                          'ADMIN': admin
                           })
 
 
@@ -132,49 +135,20 @@ def fdetemps(request):
         an, mois, jour = date1.split('-')
         date_rentree = datetime.date(int(an), int(mois), int(jour))
         semaine = date_rentree.strftime("%U")
-        # Week number of the year (Sunday as the first day of the week) as a zero padded decimal number.
-        # All days in a new year preceding the first Sunday are considered to be in week 0.
-        debut = None
-        if int(semaine) > 0:
-            # les periodes de 2019 commencent les semaines paires
-            # les periodes de 2020 commencent les semaines impaires
-            if int(semaine) % 2 > 0:            # si num semaine impair
-                d = str(an) + "-U" + semaine
-                debut = datetime.datetime.strptime(d + '-0', "%Y-U%U-%w")
-            else:
-                semcorr = int(semaine) - 1
-                d = str(an) + "-U" + str(semcorr)
-                debut = datetime.datetime.strptime(d + '-0', "%Y-U%U-%w")
-            fin = debut + datetime.timedelta(days=13)
-            semaine_debut = debut.strftime("%U")
-            quinzaine = (int(semaine_debut) + 4) / 2
-        elif int(semaine) == 0:
-            d = str(an) + "-U" + semaine
-            debut = datetime.datetime.strptime(d + '-0', "%Y-U%U-%w")
-            fin = debut + datetime.timedelta(days=13)
-            semaine_debut = debut.strftime("%U")
-            quinzaine = (int(semaine_debut) + 4) / 2
-        else:
-            messages.add_message(request, messages.ERROR, "Il manque des informations, recommencez")
-            return render(request, 'fdt.html', {'jours': jours})
+
+        periode = Periodes.objects.get(Q(datedebut__lte=date_rentree) & Q(datefin__gte=date_rentree))
+        print('periode ', periode.periode)
+        debut = periode.datedebut
+        fin = periode.datefin
+        quinzaine = periode.periode
 
         ddate = str(detailcontrat.datefin)
         an1, mois1, jour1 = ddate.split('-')
-        datefin = datetime.datetime(int(an1), int(mois1), int(jour1))
+        datefin = datetime.datetime(int(an1), int(mois1), int(jour1)).date()
         if datefin < debut:
             messages.add_message(request, messages.ERROR,
                                  "Le contrat est terminé: " + detailcontrat.datefin.strftime('%d/%m/%Y'))
             return render(request, 'fdt.html', {'jours': jours})
-
-        if int(semaine_debut) % 2 > 0:  # si num semaine impair (devrait toujours etre ca)
-            quinzaine = int(quinzaine + 1)
-        else:
-            quinzaine = int(quinzaine)
-
-        if 26 < quinzaine <= 27:
-            quinzaine = 1
-        elif quinzaine > 27:
-            quinzaine = 2
 
         date_debut = debut.strftime("%d-%m-%Y")
         date_fin = fin.strftime("%d-%m-%Y")
@@ -188,8 +162,9 @@ def fdetemps(request):
         doc.drawString(10, 10, PAGE_INFO)
         doc.drawString(330, y_sign, request.user.employe.numeemploye)
         doc.setFont('Helvetica', 12)
-        doc.drawString(70, 750, 'No contrat : ' + detailcontrat.numcontrat)
-        doc.drawString(400, 750, 'No budget : ' + detailcontrat.numbudget)
+        doc.drawString(50, 750, 'No contrat : ' + detailcontrat.numcontrat)
+        doc.drawString(250, 750, 'No budget : ' + detailcontrat.projet.budget)
+        doc.drawString(400, 750, 'Statut : ' + detailcontrat.role)
 
         if request.user.employe.signature:
             signature = ImageReader(request.user.employe.signature)
@@ -228,12 +203,17 @@ def fdetemps(request):
         for line in wraped_text.splitlines(False):
             textobject.textLine(line.rstrip())
         doc.drawText(textobject)
+        # Calculs pour enregistrement des donnees dans la BD
         debutperiode = debut.strftime("%Y-%m-%d")
-        Tempsfacture.objects.update_or_create(user=request.user, periode=quinzaine,
+        brutperiode, partemployeur = calcul_salaire(detailcontrat.tauxhoraire, somme_temps, debutperiode)
+        # Enregistrement des donnees dans la BD
+        Tempsfacture.objects.update_or_create(user=request.user, bonneperiode=periode,
                                               defaults={'heures': somme_temps,
                                                         'contrat': detailcontrat,
                                                         'commentaire': commentaire,
-                                                        'debutperiode': debutperiode}
+                                                        'partemployeur': partemployeur,
+                                                        'brutperiode': brutperiode,
+                                                        }
                                               )
         doc.save()
         fs = FileSystemStorage("/tmp")
@@ -245,13 +225,52 @@ def fdetemps(request):
         return render(request, 'fdt.html', {'jours': jours})
 
 
+def calcul_salaire(tauxhoraire, somme_temps, debutperiode):
+    brutperiode = decimal.Decimal(somme_temps) * tauxhoraire
+    charge = Charges.objects.get(Q(datedebut__lte=debutperiode) & Q(datefin__gte=debutperiode))
+    taux_autres = charge.fssttaux + charge.assemploitaux + charge.rqaptaux + charge.cnesttaux
+    partemployeur1 = decimal.Decimal(brutperiode * (taux_autres /100))
+    exemptionrrq = decimal.Decimal(charge.rrqexemption / 27)
+    if brutperiode > exemptionrrq:
+        partemployeur2 = decimal.Decimal(brutperiode - exemptionrrq) * decimal.Decimal(charge.rrqtaux /100)
+    else:
+        partemployeur2 = 0
+    partemployeur = partemployeur1 + partemployeur2
+    return brutperiode, partemployeur
+
+
 @login_required(login_url=settings.LOGIN_URI)
-def bilan(request, pk, cid):
+def bilanparcontrat(request, pk, cid):
     assistant = User.objects.get(pk=pk)
     contrat = Contratippm.objects.get(pk=cid)
-    temps = Tempsfacture.objects.filter(user=assistant, contrat=contrat).order_by('created_at', 'id')
+    temps = Tempsfacture.objects.filter(user=assistant, contrat=contrat).order_by('bonneperiode__datedebut')
+    vacances = 0
+    totalbrut = 0
+    totalcharges = 0
+    totalheures = 0
+    if temps:
+        tempscontrat1 = Tempsfacture.objects.filter(Q(correction=0) & Q(user=assistant) & Q(contrat=contrat))\
+            .aggregate(Sum('heures'), Sum('brutperiode'), Sum('partemployeur'))
+        tempscontrat2 = Tempsfacture.objects.filter(Q(correction=1) & Q(user=assistant) & Q(contrat=contrat)) \
+            .aggregate(Sum('heures'), Sum('brutperiode'), Sum('partemployeurcorr'))
+        if tempscontrat2['brutperiode__sum'] is not None:
+            totalbrut = tempscontrat1['brutperiode__sum'] + tempscontrat2['brutperiode__sum']
+            totalcharges = tempscontrat1['partemployeur__sum'] + tempscontrat2['partemployeurcorr__sum']
+            totalheures = tempscontrat1['heures__sum'] + tempscontrat2['heures__sum']
+        else:
+            totalbrut = tempscontrat1['brutperiode__sum']
+            totalcharges = tempscontrat1['partemployeur__sum']
+            totalheures = tempscontrat1['heures__sum']
 
-    return render(request, "bilan.html", {'RA': assistant, 'contrat': contrat, 'temps': temps})
+        vacances = totalbrut * decimal.Decimal('0.04')
+
+    return render(request, "bilan.html", {'RA': assistant,
+                                          'contrat': contrat,
+                                          'temps': temps,
+                                          'vacances': vacances,
+                                          'totalbrut': totalbrut,
+                                          'totalcharges': totalcharges,
+                                          'totalheures': totalheures})
 
 
 @login_required(login_url=settings.LOGIN_URI)
@@ -259,3 +278,46 @@ def listecontrats(request):
     contrats = Contratippm.objects.all().order_by('datedebut')
     assistants = Role.objects.filter(role=1).order_by('user__last_name')
     return render(request, 'listecontrats.html', {'RAs': assistants, 'contrats': contrats})
+
+
+@login_required(login_url=settings.LOGIN_URI)
+def bilanparprojet(request):
+    contrats = Contratippm.objects.values('nomprojet').annotate(Count('numcontrat'))
+    print(contrats)
+    assistants = Role.objects.filter(role=1).order_by('user__last_name')
+    return render(request, 'liste.html', {'RAs': assistants})
+
+
+@login_required(login_url=settings.LOGIN_URI)
+def projet_new(request):
+    if request.method == "POST":
+        form = ProjetForm(request.POST)
+        if form.is_valid():
+            projet = form.save(commit=False)
+            projet.save()
+            messages.success(request, "Le projet a été ajouté à la liste")
+            return redirect('listeprojets')
+        else:
+            messages.error(request, "Il y a eu une erreur dans la création du projet, recommencez")
+    else:
+        form = ProjetForm()
+    return render(request, 'projet_edit.html', {'form': form})
+
+
+@login_required(login_url=settings.LOGIN_URI)
+def listeprojets(request):
+    projets = Projet.objects.all().order_by('nomcourt')
+    return render(request, 'projet_liste.html', {'projets': projets})
+
+
+def mise_a_jour_db(request, pk):
+    temppsassistant = Tempsfacture.objects.filter(Q(user_id=pk) & Q(debutperiode__gte='2020-03-01'))
+    for tps in temppsassistant:
+        taux = tps.contrat.tauxhoraire
+        brutperiode, partemployeur = calcul_salaire(taux, tps.heures)
+        Tempsfacture.objects.update_or_create(id=tps.id,
+                                          defaults={'partemployeur': partemployeur,
+                                                    'brutperiode': brutperiode
+                                                    }
+                                          )
+    return redirect('listeassistants')

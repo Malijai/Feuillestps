@@ -20,7 +20,7 @@
     </div>
 
     <div class="w3-half w3-center">
-        <h4>INPLPP -  Feuilles de temps</h4>
+        <h4>INPLPP - Feuilles de temps</h4>
     </div>
 </header>
 
@@ -34,21 +34,32 @@
 {% endif %}
 <div class="w3-threequarter">
 <h2>{{ RA.last_name }}, {{ RA.first_name }}</h2>
-    <h4>Contrat # {{contrat.numcontrat}}, Budget # {{contrat.numbudget}} ({{contrat.nomprojet}})</h4>
+    <h4>Contrat # {{contrat.numcontrat}}, Budget # {{contrat.projet.budget}} {{contrat.projet.nomlong}} ({{contrat.projet.nomcourt}})</h4>
     <h4>Date de début : {{contrat.datedebut}}, Date de fin : {{contrat.datefin}}</h4>
+<h4></h4>
     <table class="w3-table-all">
+        <tr class="w3-theme-action">
+         <td><b>Vacances</b></td>
+         <td><b>{{vacances|floatformat:2}}$</b></td>
+         <td><b>Totaux</b></td>
+         <td><b>{{totalheures}} heures</b></td>
+         <td><b>{{totalbrut}}$</b></td>
+         <td colspan="2"><b> PE réelle : {{totalcharges}}$</b></td>
+     </tr>
       <tr>
-        <th>Periode</th><th>Date début période</th>
-        <th>Temps facturé</th><th>Salaire versé</th>
-        <th>Commentaires</th>
-      </tr>
-    {% for temp in temps %}
-     <tr><td>{{temp.periode}}</td><td>{{temp.debutperiode}}</td>
-         <td>{{temp.heures}}</td>
-         <td>{{temp.heures|mul:contrat.tauxhoraire}}$</td>
-         <td>{{temp.commentaire}}</td>
+        <th>Période</th><th>Début période</th><th>Commentaires</th>
+        <th>Temps facturé</th><th>Salaire brut</th><th>PE estimée</th><th>PE corrigée</th>
+      </tr>    {% for temp in temps %}
+     <tr><td>{{temp.periode}}</td>
+         <td>{{temp.debutperiode}}</td>
+         <td>{{temp.commentaire|default:""}}</td>
+         <td>{{temp.heures|default:0}}</td>
+         <td>{{temp.brutperiode}}$</td>
+         <td>{{temp.partemployeur}}$</td>
+         <td>{{temp.partemployeurcorr|default:"0.00"}}$</td>
      </tr>
     {% endfor %}
+
     </table>
 </div>
 

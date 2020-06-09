@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-from .models import Employe, Contratippm, Role
+from .models import Employe, Contratippm, Role, Tempsfacture
 
 
 class TempsInline(admin.StackedInline):
@@ -30,5 +30,12 @@ class TempsUserAdmin(UserAdmin):
         return super(TempsUserAdmin, self).get_inline_instances(request,obj)
 
 
+class TempsfactureAdmin(admin.ModelAdmin):
+    model = Tempsfacture
+    can_delete = False
+    list_display = ('user', 'contrat', 'periode', 'brutperiode', 'partemployeur', 'partemployeurcorr')
+
+
 admin.site.unregister(User)
 admin.site.register(User, TempsUserAdmin)
+admin.site.register(Tempsfacture, TempsfactureAdmin)

@@ -33,25 +33,25 @@
             <tr class="w3-dark-grey">
                 <th></th>
                 <th>Numéro du contrat</th>
-                <th>Budget #</th>
-                <th>Nom du projet</th>
-                <th>Heures max</th>
+                <th>Projet</th>
+                <th>Rôle dans le projet</th>
+                <th>Heures max/semaine</th>
                 <th>Date debut</th>
                 <th>Date de fin</th>
                 <th>Taux horaire</th>
-                <th>Charges</th>
+                <th>Niveau</th>
             </tr>
             {% for contrat in contrat_formset %}
                 <tr>
                 <td>{{ contrat.id }}</td>
                 <td>{{ contrat.numcontrat }}</td>
-                <td>{{ contrat.numbudget }}</td>
-                <td>{{ contrat.nomprojet }}</td>
+                <td>{{ contrat.projet }}</td>
+                <td>{{ contrat.role }}</td>
                 <td>{{ contrat.maxheures }}</td>
                 <td>{{ contrat.datedebut }}</td>
                 <td>{{ contrat.datefin }}</td>
                 <td>{{ contrat.tauxhoraire }}</td>
-                <td>{{ contrat.charges }}</td>
+                <td>{{ contrat.niveau }}</td>
                 </tr>
             {% endfor %}
         </table>

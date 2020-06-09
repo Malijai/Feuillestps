@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django import forms
-from .models import User, Contratippm, Employe
+from .models import User, Contratippm, Employe, Projet
 from django.forms import inlineformset_factory
 
 
@@ -15,7 +15,7 @@ class EmployeForm(forms.ModelForm):
 class ContratippmForm(forms.ModelForm):
     class Meta:
         model = Contratippm
-        fields = ('numcontrat','numbudget', 'nomprojet','maxheures','datedebut','datefin','tauxhoraire')
+        fields = ('numcontrat','projet','maxheures','datedebut','datefin','role','tauxhoraire','niveau')
         help_texts = {
             'datedebut': 'aaaa-mm-jj',
             'datefin': 'aaaa-mm-jj',
@@ -26,8 +26,14 @@ class ContratippmForm(forms.ModelForm):
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['last_name', 'first_name', 'email' ]
+        fields = ['last_name', 'first_name', 'email']
         exclude = ()
+
+
+class ProjetForm(forms.ModelForm):
+    class Meta:
+        model = Projet
+        fields = ('nomcourt','nomlong', 'budget', 'origine', 'responsable')
 
 
 ContratFormSet = inlineformset_factory(User, Contratippm, form= ContratippmForm,

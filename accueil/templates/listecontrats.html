@@ -38,19 +38,19 @@
            <tr><th> </th><th> </th><th> </th></tr>
             {% for RA in RAs %}
             <thead>
-            <tr class="w3-theme-l1"><th>{{ RA.user.last_name }}, {{ RA.user.first_name }}</th>
+            <tr class="w3-theme-l1"><th colspan="2">{{ RA.user.last_name }}, {{ RA.user.first_name }}</th>
                 <th></th><th></th>
-                <th></th><th></th><th></th>
+                <th></th><th></th>
             </tr>
             </thead>
             {% for contrat in contrats %}
             {% if contrat.user.id == RA.user.id %}
             <tr><td></td>
                 <td>{{ contrat.numcontrat }}</td>
-                <td>{{ contrat.nomprojet }}</td>
+                <td>{{ contrat.projet.nomcourt }}</td>
                 <td>{{ contrat.datedebut }}</td>
                 <td>{{ contrat.datefin }}</td>
-                <td><a href="{% url 'bilan' contrat.user.id contrat.id %}" class="btn-default">Voir détails</a> </td></tr>
+                <td><a href="{% url 'bilanparcontrat' contrat.user.id contrat.id %}" class="btn-default">Voir détails</a> </td></tr>
             {% endif %}
             {% endfor %}
             {% endfor %}
