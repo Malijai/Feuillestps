@@ -15,7 +15,7 @@ class EmployeForm(forms.ModelForm):
 class ContratippmForm(forms.ModelForm):
     class Meta:
         model = Contratippm
-        fields = ('numcontrat','projet','maxheures','datedebut','datefin','role','tauxhoraire','niveau')
+        fields = ('numcontrat','projet','maxheures','datedebut','datefin','role','tauxhoraire','niveau','vacancestaux')
         help_texts = {
             'datedebut': 'aaaa-mm-jj',
             'datefin': 'aaaa-mm-jj',

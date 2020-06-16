@@ -38,12 +38,11 @@ class Contratippm(models.Model):
     tauxhoraire = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Taux horaire pour ce contrat")
     niveau = models.ForeignKey(Niveau, verbose_name="Niveau scolaire/universitaire", on_delete=models.DO_NOTHING)
     projet = models.ForeignKey('Projet', verbose_name="Projet", on_delete=models.DO_NOTHING)
-    vacancesexclues = models.BooleanField(default='False')
+    vacancestaux = models.DecimalField(max_digits=5, decimal_places=3, verbose_name="Taux pour les vacances (%)")
     role = models.CharField(max_length=50, verbose_name="Rôle / statut", null=True, blank=True)
 
     def __str__(self):
-        return '{0} - {1}'.format(self.numcontrat, self.nomprojet)
-
+        return '{0} - {1}'.format(self.numcontrat, self.projet.nomcourt)
 
 
 class Periodes(models.Model):
@@ -66,10 +65,8 @@ class Tempsfacture(models.Model):
     brutperiode = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Salaire brut")
     partemployeurcorr = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, verbose_name="Correction part employeur")
     correction = models.IntegerField(default=0)
+    vacances = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Vacances calculées")
     updated_on = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['user', 'bonneperiode']
 
     def __str__(self):
         return '%s' % self.user

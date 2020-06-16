@@ -18,7 +18,7 @@
                     <td><select name="contratid" >
                         <option value="">Choisir le projet / contrat</option>
                         {% for contrat in user.contratippm_set.all %}
-                            <option value="{{contrat.id}}">{{contrat.numcontrat}} - {{contrat.nomprojet}}</option>
+                            <option value="{{contrat.id}}">{{contrat.numcontrat}} - {{contrat.nomcourt}}</option>
                         {% endfor %}
                         </select>
                     </td>

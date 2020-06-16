@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 from django.http import HttpResponse
 from django.contrib import messages
-from .models import Tempsfacture, Contratippm, Role, User, Employe, Projet, Periodes, Charges
+from .models import Tempsfacture, Contratippm, Role, User, Employe, Projet, Periodes, Charges, Niveau
 from .forms import ContratFormSet, UserForm, EmployeForm, ProjetForm
 from reportlab.pdfgen.canvas import Canvas
 from django.core.files.storage import FileSystemStorage
@@ -15,12 +15,32 @@ import unicodedata
 from textwrap import wrap
 from django.db.models import Q, Sum, Count
 import decimal
+from collections import OrderedDict
 
 
 NOM_FICHIER_PDF = "FeuilleTemps_"
 PAGE_INFO = "Feuilles de temps - Date d'impression : " + datetime.datetime.now().strftime('%d/%m/%Y')
 
 DATE = datetime.datetime.now().strftime('%Y %b %d')
+
+
+@login_required(login_url=settings.LOGIN_URI)
+def choix(request):
+    ra = False
+    admin = False
+    droits = Role.objects.filter(user_id=request.user.id)
+
+    for droit in droits:
+        if droit.role == Role.RA:
+            ra = True
+        elif droit.role == Role.ADMIN:
+            admin = True
+
+    return render(request, "choix.html",
+                          {
+                          'RA': ra,
+                          'ADMIN': admin
+                          })
 
 
 @login_required(login_url=settings.LOGIN_URI)
@@ -57,14 +77,12 @@ def assistant_edit(request, pk):
             else:
                 return redirect('listeassistants')
         else:
-
             messages.error(request, "Il y a une erreur dans l'enregistrement de l'assistant ou du contrat.")
             return redirect(assistant_edit, assistant.id)
     else:
         assistant_form = UserForm(instance=assistant)
         employe_form = EmployeForm(instance=employe)
         contrat_formset = ContratFormSet(instance=assistant)
-
     context = {
         'form': assistant_form,
         'employe': employe_form,
@@ -74,22 +92,19 @@ def assistant_edit(request, pk):
 
 
 @login_required(login_url=settings.LOGIN_URI)
-def choix(request):
-    ra = False
-    admin = False
-    droits = Role.objects.filter(user_id=request.user.id)
-
-    for droit in droits:
-        if droit.role == Role.RA:
-            ra = True
-        elif droit.role == Role.ADMIN:
-            admin = True
-
-    return render(request, "choix.html",
-                          {
-                          'RA': ra,
-                          'ADMIN': admin
-                          })
+def projet_new(request):
+    if request.method == "POST":
+        form = ProjetForm(request.POST)
+        if form.is_valid():
+            projet = form.save(commit=False)
+            projet.save()
+            messages.success(request, "Le projet a été ajouté à la liste")
+            return redirect('listeprojets')
+        else:
+            messages.error(request, "Il y a eu une erreur dans la création du projet, recommencez")
+    else:
+        form = ProjetForm()
+    return render(request, 'projet_edit.html', {'form': form})
 
 
 @login_required(login_url=settings.LOGIN_URI)
@@ -135,13 +150,11 @@ def fdetemps(request):
         an, mois, jour = date1.split('-')
         date_rentree = datetime.date(int(an), int(mois), int(jour))
         semaine = date_rentree.strftime("%U")
-
         periode = Periodes.objects.get(Q(datedebut__lte=date_rentree) & Q(datefin__gte=date_rentree))
         print('periode ', periode.periode)
         debut = periode.datedebut
         fin = periode.datefin
         quinzaine = periode.periode
-
         ddate = str(detailcontrat.datefin)
         an1, mois1, jour1 = ddate.split('-')
         datefin = datetime.datetime(int(an1), int(mois1), int(jour1)).date()
@@ -165,18 +178,14 @@ def fdetemps(request):
         doc.drawString(50, 750, 'No contrat : ' + detailcontrat.numcontrat)
         doc.drawString(250, 750, 'No budget : ' + detailcontrat.projet.budget)
         doc.drawString(400, 750, 'Statut : ' + detailcontrat.role)
-
         if request.user.employe.signature:
             signature = ImageReader(request.user.employe.signature)
             doc.drawImage(signature, 130, (y_sign - 15), 130, 50, mask='auto')
-
         doc.drawString(70, 636, request.user.first_name.capitalize() + " " + request.user.last_name.capitalize())
-
         doc.drawString(450, 645, 'PAIE : ' + str(quinzaine))
         doc.drawString(420, y_sign, date_debut)
         doc.drawString(515, y_sign, date_fin)
         doc.drawString(515, 115, date_fin)
-
         for semaine in semaines:
             temps_semaine = 0
             for jour in range(7):
@@ -195,17 +204,15 @@ def fdetemps(request):
                     messages.add_message(request, messages.ERROR,
                                          "Nombre maximum d'heures autorisées par semaine : " + detailcontrat.maxheures)
                     return render(request, 'fdt.html', {'jours': jours})
-
         doc.drawString(515, y_heures, str(somme_temps))
-
         textobject = doc.beginText(60, 160)
-        wraped_text = "\n".join(wrap(commentaire, 90))  # 80 is line width
+        wraped_text = "\n".join(wrap(commentaire, 90))  # 90 is line width
         for line in wraped_text.splitlines(False):
             textobject.textLine(line.rstrip())
         doc.drawText(textobject)
         # Calculs pour enregistrement des donnees dans la BD
         debutperiode = debut.strftime("%Y-%m-%d")
-        brutperiode, partemployeur = calcul_salaire(detailcontrat.tauxhoraire, somme_temps, debutperiode)
+        brutperiode, partemployeur, vacances = calcul_salaire(detailcontrat.tauxhoraire, somme_temps, debutperiode, detailcontrat.vacancestaux)
         # Enregistrement des donnees dans la BD
         Tempsfacture.objects.update_or_create(user=request.user, bonneperiode=periode,
                                               defaults={'heures': somme_temps,
@@ -213,6 +220,8 @@ def fdetemps(request):
                                                         'commentaire': commentaire,
                                                         'partemployeur': partemployeur,
                                                         'brutperiode': brutperiode,
+                                                        'vacances': vacances,
+
                                                         }
                                               )
         doc.save()
@@ -225,7 +234,7 @@ def fdetemps(request):
         return render(request, 'fdt.html', {'jours': jours})
 
 
-def calcul_salaire(tauxhoraire, somme_temps, debutperiode):
+def calcul_salaire(tauxhoraire, somme_temps, debutperiode, tauxvacances):
     brutperiode = decimal.Decimal(somme_temps) * tauxhoraire
     charge = Charges.objects.get(Q(datedebut__lte=debutperiode) & Q(datefin__gte=debutperiode))
     taux_autres = charge.fssttaux + charge.assemploitaux + charge.rqaptaux + charge.cnesttaux
@@ -235,42 +244,67 @@ def calcul_salaire(tauxhoraire, somme_temps, debutperiode):
         partemployeur2 = decimal.Decimal(brutperiode - exemptionrrq) * decimal.Decimal(charge.rrqtaux /100)
     else:
         partemployeur2 = 0
+        vacances = decimal.Decimal(brutperiode) * decimal.Decimal(tauxvacances /100)
     partemployeur = partemployeur1 + partemployeur2
-    return brutperiode, partemployeur
+    return brutperiode, partemployeur, vacances
 
 
 @login_required(login_url=settings.LOGIN_URI)
-def bilanparcontrat(request, pk, cid):
-    assistant = User.objects.get(pk=pk)
+def bilanparcontrat(request, cid):
     contrat = Contratippm.objects.get(pk=cid)
-    temps = Tempsfacture.objects.filter(user=assistant, contrat=contrat).order_by('bonneperiode__datedebut')
-    vacances = 0
-    totalbrut = 0
-    totalcharges = 0
-    totalheures = 0
+    temps = Tempsfacture.objects.filter(contrat=contrat).order_by('bonneperiode__datedebut')
     if temps:
-        tempscontrat1 = Tempsfacture.objects.filter(Q(correction=0) & Q(user=assistant) & Q(contrat=contrat))\
-            .aggregate(Sum('heures'), Sum('brutperiode'), Sum('partemployeur'))
-        tempscontrat2 = Tempsfacture.objects.filter(Q(correction=1) & Q(user=assistant) & Q(contrat=contrat)) \
-            .aggregate(Sum('heures'), Sum('brutperiode'), Sum('partemployeurcorr'))
-        if tempscontrat2['brutperiode__sum'] is not None:
-            totalbrut = tempscontrat1['brutperiode__sum'] + tempscontrat2['brutperiode__sum']
-            totalcharges = tempscontrat1['partemployeur__sum'] + tempscontrat2['partemployeurcorr__sum']
-            totalheures = tempscontrat1['heures__sum'] + tempscontrat2['heures__sum']
-        else:
-            totalbrut = tempscontrat1['brutperiode__sum']
-            totalcharges = tempscontrat1['partemployeur__sum']
-            totalheures = tempscontrat1['heures__sum']
+        touteslesannees = []
+        tempscontrat0 = Tempsfacture.objects.filter(Q(correction=0) & Q(contrat=contrat))\
+            .aggregate(h0=Sum('heures'), b0=Sum('brutperiode'), pe0=Sum('partemployeur'), v0=Sum('vacances'))
+        tempscontrat1 = Tempsfacture.objects.filter(Q(correction=1) & Q(contrat=contrat)) \
+            .aggregate(h1=Sum('heures'), b1=Sum('brutperiode'), pe1=Sum('partemployeurcorr'), v1=Sum('vacances'))
+        totalheures, totalbrut, totalcharges, totalvacances = fait_totaux(tempscontrat0, tempscontrat1)
 
-        vacances = totalbrut * decimal.Decimal('0.04')
+        anneesfiscales = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(Q(contrat=contrat))\
+                        .distinct()
+        for annee in anneesfiscales:
+            ligneannee = []
+            anneef = annee['bonneperiode__anneefiscale']
 
-    return render(request, "bilan.html", {'RA': assistant,
-                                          'contrat': contrat,
+            anneefiscale0 = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(Q(correction=0) & Q(contrat=contrat) & Q(bonneperiode__anneefiscale=anneef)) \
+                    .aggregate(h0=Sum('heures'), b0=Sum('brutperiode'), pe0=Sum('partemployeur'), v0=Sum('vacances'))
+            anneefiscale1 = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(Q(correction=1) & Q(contrat=contrat) & Q(bonneperiode__anneefiscale=anneef)) \
+                    .aggregate(h1=Sum('heures'), b1=Sum('brutperiode'), pe1=Sum('partemployeurcorr'), v1=Sum('vacances'))
+
+            totalheuresa, totalbruta, totalchargesa, totalvacancesa = fait_totaux(anneefiscale0, anneefiscale1)
+            ligneannee.append(anneef)
+            ligneannee.append(totalheuresa)
+            ligneannee.append(totalbruta)
+            ligneannee.append(totalchargesa)
+            ligneannee.append(totalvacancesa)
+            touteslesannees.append(ligneannee)
+
+        return render(request, "bilanpcontrat.html", {'contrat': contrat,
                                           'temps': temps,
-                                          'vacances': vacances,
+                                          'vacances': totalvacances,
                                           'totalbrut': totalbrut,
                                           'totalcharges': totalcharges,
-                                          'totalheures': totalheures})
+                                          'totalheures': totalheures,
+                                          'touteslesannees': touteslesannees})
+    else:
+        messages.error(request, "Il n'y a pas eu d'heures facturées pour ce contrat.")
+        return render(request, "bilanpcontrat.html", {'contrat': contrat,
+                                                      })
+
+
+def fait_totaux(noncorrigee, corrigee):
+    totalheuresa = noncorrigee['h0']
+    totalbruta = noncorrigee['b0']
+    totalchargesa = noncorrigee['pe0']
+    totalvacances = noncorrigee['v0']
+    if corrigee['h1'] is not None:
+        totalheuresa = noncorrigee['h0'] + corrigee['h1']
+        totalbruta = noncorrigee['b0'] + corrigee['b1']
+        totalchargesa = noncorrigee['pe0'] + corrigee['pe1']
+        totalvacances = noncorrigee['v0'] + corrigee['v1']
+
+    return totalheuresa,totalbruta, totalchargesa, totalvacances
 
 
 @login_required(login_url=settings.LOGIN_URI)
@@ -281,27 +315,71 @@ def listecontrats(request):
 
 
 @login_required(login_url=settings.LOGIN_URI)
-def bilanparprojet(request):
-    contrats = Contratippm.objects.values('nomprojet').annotate(Count('numcontrat'))
-    print(contrats)
-    assistants = Role.objects.filter(role=1).order_by('user__last_name')
-    return render(request, 'liste.html', {'RAs': assistants})
+def bilanparprojet(request, pid):
+    contrats = Contratippm.objects.filter(projet=pid).order_by('user__last_name', 'datedebut')
+    projet = Projet.objects.get(pk=pid)
+    tempstous = []
+    for contrat in contrats:
+        temps = Tempsfacture.objects.filter(contrat=contrat).order_by('user','bonneperiode__datedebut')
+        tempstous.extend(temps)
+    anneesfiscales = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(contrat__in = contrats).distinct()
+    touteslesannees = []
+    comparaison = set([])
+    touslesniveaux = []
+    niveaux = set()
+    for annee in anneesfiscales:
+        ligneannee = []
+        contrats_ar = Tempsfacture.objects.values('contrat__niveau','contrat','contrat__numcontrat', 'user','user__last_name', 'contrat__niveau__reponse')\
+            .filter(Q(bonneperiode__anneefiscale=annee['bonneperiode__anneefiscale']) & Q(contrat__in=contrats))\
+            .order_by('user__last_name','contrat__numcontrat')
+        liste_c_ras = []
+        for c_ra in contrats_ar:
+            liste_c_ras.append(c_ra['user'])
+            liste_c_ras.append(c_ra['contrat'])
+            value = tuple([c_ra['user'], c_ra['user__last_name'],c_ra['contrat'], c_ra['contrat__numcontrat'], annee['bonneperiode__anneefiscale'], c_ra['contrat__niveau__reponse']])
+            comparaison.add(value)
+            niv = (c_ra['contrat__niveau'])
+            niveaux.add(niv)
+        for niveau in niveaux:
+            ligneniveau = []
+            anneef = annee['bonneperiode__anneefiscale']
+            anneefiscale0 = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(
+                Q(correction=0) & Q(contrat__in=contrats) & Q(contrat__niveau=niveau) & Q(bonneperiode__anneefiscale=anneef)) \
+                .aggregate(h0=Sum('heures'), b0=Sum('brutperiode'), pe0=Sum('partemployeur'), v0=Sum('vacances'))
+            anneefiscale1 = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(
+                Q(correction=1) & Q(contrat__in=contrats) & Q(contrat__niveau=niveau)  & Q(bonneperiode__anneefiscale=anneef)) \
+                .aggregate(h1=Sum('heures'), b1=Sum('brutperiode'), pe1=Sum('partemployeurcorr'), v1=Sum('vacances'))
+            totalheuresa, totalbruta, totalchargesa, totalvacances = fait_totaux(anneefiscale0, anneefiscale1)
+            niveau_nom = Niveau.objects.get(pk=niveau)
+            ligneniveau.append(anneef)
+            ligneniveau.append(totalheuresa)
+            ligneniveau.append(totalbruta)
+            ligneniveau.append(totalchargesa)
+            ligneniveau.append(totalvacances)
+            ligneniveau.append(niveau_nom.reponse)
+            touslesniveaux.append(ligneniveau)
 
+        anneef = annee['bonneperiode__anneefiscale']
+        anneefiscale0 = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(
+                Q(correction=0) & Q(contrat__in = contrats) & Q(bonneperiode__anneefiscale=anneef)) \
+                .aggregate(h0=Sum('heures'), b0=Sum('brutperiode'), pe0=Sum('partemployeur'), v0=Sum('vacances'))
+        anneefiscale1 = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(
+                Q(correction=1) & Q(contrat__in = contrats) & Q(bonneperiode__anneefiscale=anneef)) \
+                .aggregate(h1=Sum('heures'), b1=Sum('brutperiode'), pe1=Sum('partemployeurcorr'), v1=Sum('vacances'))
+        totalheuresa, totalbruta, totalchargesa, totalvacances = fait_totaux(anneefiscale0, anneefiscale1)
+        ligneannee.append(anneef)
+        ligneannee.append(totalheuresa)
+        ligneannee.append(totalbruta)
+        ligneannee.append(totalchargesa)
+        ligneannee.append(totalvacances)
+        touteslesannees.append(ligneannee)
 
-@login_required(login_url=settings.LOGIN_URI)
-def projet_new(request):
-    if request.method == "POST":
-        form = ProjetForm(request.POST)
-        if form.is_valid():
-            projet = form.save(commit=False)
-            projet.save()
-            messages.success(request, "Le projet a été ajouté à la liste")
-            return redirect('listeprojets')
-        else:
-            messages.error(request, "Il y a eu une erreur dans la création du projet, recommencez")
-    else:
-        form = ProjetForm()
-    return render(request, 'projet_edit.html', {'form': form})
+    return render(request, 'bilanpprojet.html', {'contrats': contrats,
+                                                 'temps': tempstous,
+                                                 'touteslesannees': touteslesannees,
+                                                 'touslesniveaux': touslesniveaux,
+                                                 'lignes': comparaison,
+                                                 'projet': projet})
 
 
 @login_required(login_url=settings.LOGIN_URI)
@@ -314,10 +392,11 @@ def mise_a_jour_db(request, pk):
     temppsassistant = Tempsfacture.objects.filter(Q(user_id=pk) & Q(debutperiode__gte='2020-03-01'))
     for tps in temppsassistant:
         taux = tps.contrat.tauxhoraire
-        brutperiode, partemployeur = calcul_salaire(taux, tps.heures)
+        brutperiode, partemployeur, vacances = calcul_salaire(taux, tps.heures, tps.contrat.vacancestaux)
         Tempsfacture.objects.update_or_create(id=tps.id,
                                           defaults={'partemployeur': partemployeur,
-                                                    'brutperiode': brutperiode
+                                                    'brutperiode': brutperiode,
+                                                    'vacances': vacances
                                                     }
                                           )
     return redirect('listeassistants')

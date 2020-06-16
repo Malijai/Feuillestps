@@ -39,6 +39,7 @@
                 <th>Date debut</th>
                 <th>Date de fin</th>
                 <th>Taux horaire</th>
+                <th>% vacances</th>
                 <th>Niveau</th>
             </tr>
             {% for contrat in contrat_formset %}
@@ -51,6 +52,7 @@
                 <td>{{ contrat.datedebut }}</td>
                 <td>{{ contrat.datefin }}</td>
                 <td>{{ contrat.tauxhoraire }}</td>
+                <td>{{ contrat.vacancestaux }}</td>
                 <td>{{ contrat.niveau }}</td>
                 </tr>
             {% endfor %}

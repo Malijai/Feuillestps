@@ -1,0 +1,63 @@
+{% extends 'bilan_base.html' %}
+{% load i18n %}
+
+{% block titre %}
+    <h4>Bilan par projet / par année fiscale</h4>
+{% endblock %}
+
+{% block contenuprincipal %}
+<div class="w3-row">
+    <div class="w3-threequarter">
+    <h3>Bilan du projet {{projet.nomlong}} (Budget# {{projet.budget}}) </h3>
+    <table class="w3-table-all">
+    {% for annee in touteslesannees %}
+        <tr class="w3-theme-d2 w3-large"><td><b>Bilan année fiscale</b></td>
+           <td><b>{{ annee.0 }}</b></td>
+           <td><b>{{ annee.1 }} heures</b></td>
+           <td><b>{{ annee.2|floatformat:2 }}$</b></td>
+           <td colspan="2"> <b>PE réelle : {{ annee.3|floatformat:2 }}$</b></td>
+           <td><b>Vacances calculées<br /> payées : {{ annee.4|floatformat:2 }}$</b></td>
+        </tr>
+        {% for niveau in touslesniveaux %}
+            {% if niveau.0 == annee.0 %}
+            <tr class="w3-theme-l3"><td>Niveau :</td>
+               <td>{{ niveau.5 }}</td>
+               <td>{{ niveau.1 }} heures</td>
+               <td>{{ niveau.2 }}$</td>
+               <td colspan="2"> PE réelle : {{ niveau.3|floatformat:2 }}$</td>
+               <td>Vacances calculées<br /> payées : {{ niveau.4|floatformat:2 }}$</td>
+           </tr>
+            {% endif %}
+        {% endfor %}
+            <tr>
+                <td colspan="7"><h3 class="w3-center">Détails par contrat et par période pour l'année {{ annee.0 }}</h3></td>
+            </tr>
+        {% for donnee in lignes %}
+            {% if donnee.4 == annee.0 %}
+            <tr class="w3-small w3-theme-l4">
+            <td><br>{{donnee.1}}; {{donnee.3}}<br />{{donnee.5}}</b></td>
+             <td>Periode {{ annee.0 }}</td><td>Heures</td><td>Brut</td><td>PE</td><td>PE corrigee</td><td>Vacances calculées<br /> payées</td>
+            </tr>
+            {% for temp in temps %}
+                {% if temp.contrat.id == donnee.2 and temp.bonneperiode.anneefiscale == donnee.4 %}
+                    <tr class="w3-small"><td></td>
+                        <td>{{temp.bonneperiode.periode}}</td>
+                        <td>{{temp.heures}}</td>
+                        <td>{{temp.brutperiode|floatformat:2 }}</td>
+                        <td>{{temp.partemployeur|floatformat:2 }}</td>
+                        <td>{{temp.partemployeurcorr|floatformat:2 }}</td>
+                        <td>{{temp.vacances|floatformat:2 }}</td>
+                    </trw3-tiny>
+                {% endif %}
+            {% endfor %}
+            {% endif %}
+        {% endfor %}
+        </tr>
+     {% endfor %}
+     </table>
+</div></div>
+{% endblock %}
+
+{% block pied %}
+    <p>Bilan par projet / par année fiscale</p>
+{% endblock %}

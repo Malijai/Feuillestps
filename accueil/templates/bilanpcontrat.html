@@ -1,0 +1,57 @@
+{% extends 'bilan_base.html' %}
+{% load i18n %}
+
+{% block titre %}
+    <h4>Bilan par contrat / par année fiscale</h4>
+{% endblock %}
+
+{% block contenuprincipal %}
+
+<div class="w3-row">
+<div class="w3-threequarter">
+<h2>{{ contrat.user.last_name }}, {{ contrat.user.first_name }}</h2>
+    <h4>Budget # {{contrat.projet.budget}} {{contrat.projet.nomlong}} ({{contrat.projet.nomcourt}})</h4>
+  <table class="w3-table-all">
+         <tr class="w3-theme-d2"><td colspan="8"><b>Totaux du contrat  #{{contrat.numcontrat}} ({{contrat.datedebut}}, {{contrat.datefin}}) </b></td>
+        </tr>
+        <tr class="w3-theme-d2">
+         <td colspan="3"><b>Vacances ({{ contrat.vacancestaux|floatformat:2 }} %): {{vacances|floatformat:2}}$</b></td>
+         <td colspan="2"><b>Temps facturé: {{totalheures}} heures</b></td>
+         <td><b>Brut : {{totalbrut}}$</b></td>
+         <td colspan="2"><b>PE réelle : {{totalcharges}}$</b></td>
+    {% for ligne in touteslesannees %}
+        <tr class="w3-theme-l3 w3-large"><td colspan="3">Bilan année fiscale : {{ ligne.0 }}</td>
+           <td></td>
+           <td>{{ ligne.1 }} heures</td>
+           <td>{{ ligne.2 }}$</td>
+           <td colspan="2"> PE réelle : {{ ligne.3 }}$</td>
+           </tr>
+      </tr>
+      <tr>
+        <th>Période</th><th>année fiscale</th><th>Debut période</th><th>Commentaires</th>
+        <th>Temps facturé</th><th>Salaire brut</th><th>PE estimée</th><th>PE corrigée</th>
+      </tr>
+      {% for temp in temps %}
+        {% if temp.bonneperiode.anneefiscale == ligne.0 %}
+          <tr>
+             <td>{{temp.bonneperiode.periode}}</td>
+             <td>{{temp.bonneperiode.anneefiscale}}</td>
+             <td>{{temp.debutperiode}}</td>
+             <td>{{temp.commentaire|default:""}}</td>
+             <td>{{temp.heures|default:0}}</td>
+             <td>{{temp.brutperiode}}$</td>
+             <td>{{temp.partemployeur}}$</td>
+             <td>{{temp.partemployeurcorr|default:"0.00"}}$</td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+  </table>
+
+</div></div>
+{% endblock %}
+
+{% block pied %}
+    <p>Bilan par contrat / par année fiscale</p>
+{% endblock %}
+
