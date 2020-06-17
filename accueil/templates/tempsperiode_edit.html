@@ -1,0 +1,45 @@
+{% extends 'bilan_base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block contenuprincipal %}
+
+<div class="principal">
+{% if messages %}
+    {% for msg in messages %}
+        <div class="w3-orange" role="alert">
+        {{msg.message}}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<form method="POST" class="Entree-form" >
+
+    <div class="w3-row">
+        <div class="w3-half w3-center">
+                {% csrf_token %}
+                <table class="w3-table-all">
+
+                    <tr><td>Contrat</td><td>{{ temps.contrat }}</td></tr>
+                    <tr><td>Période</td><td>{{ temps.bonneperiode }}</td></tr>
+                    <tr><td>Heures facturées</td><td>{{ temps.heures }}</td></tr>
+                    <tr><td>Brut versé</td><td>{{ temps.brutperiode }}</td></tr>
+                    <tr><td>Part de l'employeur calculée</td><td>{{ temps.partemployeur }}</td></tr>
+
+                    {{ form.as_table }}
+
+                </table>
+        </div>
+    </div>
+    <button type="submit" class="w3-button w3-amber">Save</button>
+</form>
+</div>
+
+{% endblock %}
+
+{% block titre %}
+<h3>Interface de correction des parts de l'employeur</h3>
+{% endblock %}
+{% block pied %}
+<p>Interface de correction des parts de l'employeur</p>
+{% endblock %}

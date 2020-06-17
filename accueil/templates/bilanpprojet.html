@@ -16,7 +16,7 @@
            <td><b>{{ annee.1 }} heures</b></td>
            <td><b>{{ annee.2|floatformat:2 }}$</b></td>
            <td colspan="2"> <b>PE réelle : {{ annee.3|floatformat:2 }}$</b></td>
-           <td><b>Vacances calculées<br /> payées : {{ annee.4|floatformat:2 }}$</b></td>
+           <td><b>Vacances dues ou<br /> payées : {{ annee.4|floatformat:2 }}$</b></td>
         </tr>
         {% for niveau in touslesniveaux %}
             {% if niveau.0 == annee.0 %}
@@ -25,7 +25,7 @@
                <td>{{ niveau.1 }} heures</td>
                <td>{{ niveau.2 }}$</td>
                <td colspan="2"> PE réelle : {{ niveau.3|floatformat:2 }}$</td>
-               <td>Vacances calculées<br /> payées : {{ niveau.4|floatformat:2 }}$</td>
+               <td>Vacances dues ou<br /> payées : {{ niveau.4|floatformat:2 }}$</td>
            </tr>
             {% endif %}
         {% endfor %}
@@ -36,7 +36,7 @@
             {% if donnee.4 == annee.0 %}
             <tr class="w3-small w3-theme-l4">
             <td><br>{{donnee.1}}; {{donnee.3}}<br />{{donnee.5}}</b></td>
-             <td>Periode {{ annee.0 }}</td><td>Heures</td><td>Brut</td><td>PE</td><td>PE corrigee</td><td>Vacances calculées<br /> payées</td>
+             <td>Periode {{ annee.0 }}</td><td>Heures</td><td>Brut</td><td>PE</td><td>PE corrigee</td><td>Vacances dues ou<br /> payées</td>
             </tr>
             {% for temp in temps %}
                 {% if temp.contrat.id == donnee.2 and temp.bonneperiode.anneefiscale == donnee.4 %}

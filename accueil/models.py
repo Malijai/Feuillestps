@@ -51,19 +51,22 @@ class Periodes(models.Model):
     datedebut = models.DateField(default="2000-01-01")
     datefin = models.DateField(default="2000-01-01")
 
+    def __str__(self):
+        return '%s - %s' % (self.periode, self.anneefiscale)
+
 
 class Tempsfacture(models.Model):
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     periode = models.IntegerField(verbose_name="Numero de la periode", null=True, blank=True)
-    bonneperiode = models.ForeignKey(Periodes, on_delete=models.DO_NOTHING)
+    bonneperiode = models.ForeignKey(Periodes, on_delete=models.DO_NOTHING, verbose_name="Numero de la periode", )
     heures = models.CharField(max_length=30, verbose_name="Nb d'heures facturées dans la période", null=True, blank=True)
     contrat = models.ForeignKey(Contratippm, on_delete=models.DO_NOTHING)
     commentaire = models.CharField(max_length=250, null=True, blank=True)
     created_on = models.DateTimeField(auto_now_add=True)
     debutperiode = models.DateField(default="2000-01-01")
-    partemployeur = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Part de l employeur")
+    partemployeur = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Part de l employeur calculée")
     brutperiode = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Salaire brut")
-    partemployeurcorr = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, verbose_name="Correction part employeur")
+    partemployeurcorr = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, verbose_name="Correction part employeur réelle")
     correction = models.IntegerField(default=0)
     vacances = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Vacances calculées")
     updated_on = models.DateTimeField(auto_now=True)

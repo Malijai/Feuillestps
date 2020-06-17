@@ -25,7 +25,7 @@
                     <td>{{ contrat.projet.nomcourt }}</td>
                     <td>{{ contrat.datedebut }}</td>
                     <td>{{ contrat.datefin }}</td>
-                    <td><a href="{% url 'bilanparcontrat' contrat.id %}" class="btn-default">Voir détails</a> </td></tr>
+                    <td><a href="{% url 'bilanparcontrat' contrat.id %}"class="w3-button w3-amber">Voir détails</a> </td></tr>
                 {% endif %}
             {% endfor %}
         {% endfor %}

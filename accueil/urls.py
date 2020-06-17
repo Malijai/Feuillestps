@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import fdetemps, choix, listeassistants, assistant_edit, bilanparcontrat, listecontrats, \
-    bilanparprojet, listeprojets, projet_new, mise_a_jour_db
+    bilanparprojet, listeprojets, projet_new, mise_a_jour_db, correction_pe
 
 
 urlpatterns = [
@@ -14,6 +14,7 @@ urlpatterns = [
     path('projet/new/', projet_new, name='projet_new'),
     path('projet/', listeprojets, name='listeprojets'),
     path('correction/<int:pk>/', mise_a_jour_db, name='mise_a_jour_db'),
+    path('correctionPE/<int:pk>/', correction_pe, name='correction_pe'),
 
 ]
 

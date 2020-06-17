@@ -4,7 +4,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.contrib import messages
 from .models import Tempsfacture, Contratippm, Role, User, Employe, Projet, Periodes, Charges, Niveau
-from .forms import ContratFormSet, UserForm, EmployeForm, ProjetForm
+from .forms import ContratFormSet, UserForm, EmployeForm, ProjetForm, TempsForm
 from reportlab.pdfgen.canvas import Canvas
 from django.core.files.storage import FileSystemStorage
 from reportlab.lib.utils import ImageReader
@@ -244,7 +244,7 @@ def calcul_salaire(tauxhoraire, somme_temps, debutperiode, tauxvacances):
         partemployeur2 = decimal.Decimal(brutperiode - exemptionrrq) * decimal.Decimal(charge.rrqtaux /100)
     else:
         partemployeur2 = 0
-        vacances = decimal.Decimal(brutperiode) * decimal.Decimal(tauxvacances /100)
+    vacances = decimal.Decimal(brutperiode) * decimal.Decimal(tauxvacances /100)
     partemployeur = partemployeur1 + partemployeur2
     return brutperiode, partemployeur, vacances
 
@@ -289,8 +289,7 @@ def bilanparcontrat(request, cid):
                                           'touteslesannees': touteslesannees})
     else:
         messages.error(request, "Il n'y a pas eu d'heures facturées pour ce contrat.")
-        return render(request, "bilanpcontrat.html", {'contrat': contrat,
-                                                      })
+        return render(request, "bilanpcontrat.html", {'contrat': contrat,})
 
 
 def fait_totaux(noncorrigee, corrigee):
@@ -298,12 +297,16 @@ def fait_totaux(noncorrigee, corrigee):
     totalbruta = noncorrigee['b0']
     totalchargesa = noncorrigee['pe0']
     totalvacances = noncorrigee['v0']
+    if totalheuresa is None:
+        totalheuresa = 0
+        totalbruta = 0
+        totalchargesa = 0
+        totalvacances = 0
     if corrigee['h1'] is not None:
-        totalheuresa = noncorrigee['h0'] + corrigee['h1']
-        totalbruta = noncorrigee['b0'] + corrigee['b1']
-        totalchargesa = noncorrigee['pe0'] + corrigee['pe1']
-        totalvacances = noncorrigee['v0'] + corrigee['v1']
-
+        totalheuresa = totalheuresa + corrigee['h1']
+        totalbruta = totalbruta + corrigee['b1']
+        totalchargesa = totalchargesa + corrigee['pe1']
+        totalvacances = totalvacances + corrigee['v1']
     return totalheuresa,totalbruta, totalchargesa, totalvacances
 
 
@@ -388,15 +391,36 @@ def listeprojets(request):
     return render(request, 'projet_liste.html', {'projets': projets})
 
 
+def correction_pe(request, pk):
+    tps = Tempsfacture.objects.get(pk=pk)
+    if request.method == 'POST':
+        tps_form = TempsForm(request.POST, instance=tps)
+        if tps_form.is_valid():
+            tpscorr = tps_form.save(commit=False)
+            tpscorr.correction = 1
+            tpscorr.save()
+            messages.success(request, "La part de l'employeur a été corrigée.")
+            return redirect(bilanparcontrat, tps.contrat.id)
+    else:
+        tps_form = TempsForm(instance=tps)
+    return render(request, 'tempsperiode_edit.html', {'form': tps_form, 'temps': tps})
+
+
 def mise_a_jour_db(request, pk):
-    temppsassistant = Tempsfacture.objects.filter(Q(user_id=pk) & Q(debutperiode__gte='2020-03-01'))
-    for tps in temppsassistant:
-        taux = tps.contrat.tauxhoraire
-        brutperiode, partemployeur, vacances = calcul_salaire(taux, tps.heures, tps.contrat.vacancestaux)
-        Tempsfacture.objects.update_or_create(id=tps.id,
-                                          defaults={'partemployeur': partemployeur,
-                                                    'brutperiode': brutperiode,
-                                                    'vacances': vacances
+    contrats = Contratippm.objects.filter(projet=pk)
+    for contrat in contrats:
+        temps = Tempsfacture.objects.filter(contrat=contrat)
+        for tps in temps:
+            brutperiode = 0
+            partemployeur = 0
+            vacances = 0
+            taux = tps.contrat.tauxhoraire
+            brutperiode, partemployeur, vacances = calcul_salaire(taux, tps.heures, tps.debutperiode, tps.contrat.vacancestaux)
+
+            Tempsfacture.objects.update_or_create(id=tps.id,
+                                            defaults={'partemployeur': partemployeur,
+                                                       'brutperiode': brutperiode,
+                                                       'vacances': vacances
                                                     }
                                           )
     return redirect('listeassistants')

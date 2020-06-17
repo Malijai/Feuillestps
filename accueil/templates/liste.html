@@ -12,7 +12,8 @@
         <table class="w3-table-all">
            <tr><th>Non, Prénom</th><th>Action</th></tr>
            {% for RA in RAs %}
-            <tr><td>{{ RA.user.last_name }}, {{ RA.user.first_name }}</td><td><a href="{% url 'assistant_edit' RA.user.id %}" class="btn-default">Éditer</a> </td></tr>
+            <tr><td>{{ RA.user.last_name }}, {{ RA.user.first_name }}</td>
+                <td><a href="{% url 'assistant_edit' RA.user.id %}" class="w3-button w3-amber">Éditer</a></td></tr>
            {% endfor %}
         </table>
     </div>

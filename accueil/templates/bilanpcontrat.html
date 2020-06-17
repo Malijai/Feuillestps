@@ -12,25 +12,27 @@
 <h2>{{ contrat.user.last_name }}, {{ contrat.user.first_name }}</h2>
     <h4>Budget # {{contrat.projet.budget}} {{contrat.projet.nomlong}} ({{contrat.projet.nomcourt}})</h4>
   <table class="w3-table-all">
-         <tr class="w3-theme-d2"><td colspan="8"><b>Totaux du contrat  #{{contrat.numcontrat}} ({{contrat.datedebut}}, {{contrat.datefin}}) </b></td>
+         <tr class="w3-theme-d2"><td colspan="10"><b>Totaux du contrat  #{{contrat.numcontrat}} ({{contrat.datedebut}}, {{contrat.datefin}}) </b></td>
         </tr>
         <tr class="w3-theme-d2">
-         <td colspan="3"><b>Vacances ({{ contrat.vacancestaux|floatformat:2 }} %): {{vacances|floatformat:2}}$</b></td>
+         <td colspan="3"><b>Vacances dues ou payees <br />({{ contrat.vacancestaux|floatformat:2 }} %): {{vacances|floatformat:2}}$</b></td>
          <td colspan="2"><b>Temps facturé: {{totalheures}} heures</b></td>
          <td><b>Brut : {{totalbrut}}$</b></td>
-         <td colspan="2"><b>PE réelle : {{totalcharges}}$</b></td>
+         <td colspan="2"><b>PE réelle : {{totalcharges}}$</b></td><td></td><td></td></tr>
     {% for ligne in touteslesannees %}
-        <tr class="w3-theme-l3 w3-large"><td colspan="3">Bilan année fiscale : {{ ligne.0 }}</td>
+        <tr class="w3-theme-l3 w3-large">
+           <td colspan="3">Bilan année fiscale : {{ ligne.0 }}</td>
            <td></td>
            <td>{{ ligne.1 }} heures</td>
            <td>{{ ligne.2 }}$</td>
            <td colspan="2"> PE réelle : {{ ligne.3 }}$</td>
-           </tr>
-      </tr>
-      <tr>
-        <th>Période</th><th>année fiscale</th><th>Debut période</th><th>Commentaires</th>
-        <th>Temps facturé</th><th>Salaire brut</th><th>PE estimée</th><th>PE corrigée</th>
-      </tr>
+           <td></td><td></td>
+        </tr>
+        <tr>
+            <th>Période</th><th>année fiscale</th><th>Debut période</th><th>Commentaires</th>
+            <th>Temps facturé</th><th>Salaire brut</th><th>PE estimée</th><th>PE corrigée</th><th>Vacances</th>
+            <th>Action</th>
+        </tr>
       {% for temp in temps %}
         {% if temp.bonneperiode.anneefiscale == ligne.0 %}
           <tr>
@@ -42,12 +44,13 @@
              <td>{{temp.brutperiode}}$</td>
              <td>{{temp.partemployeur}}$</td>
              <td>{{temp.partemployeurcorr|default:"0.00"}}$</td>
+             <td>{{temp.vacances|default:"0.00"}}$</td>
+             <td><a href="{% url 'correction_pe' temp.id %}" class="w3-button w3-amber">Corriger</a></td>
           </tr>
         {% endif %}
       {% endfor %}
     {% endfor %}
   </table>
-
 </div></div>
 {% endblock %}
 

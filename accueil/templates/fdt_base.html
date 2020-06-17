@@ -14,10 +14,9 @@
     </head>
 <body class="w3-theme-l5">
 
-<div class="principal w3-theme-l5">
-<!-- Header -->
+<header id="myHeader">
+<div class="w3-row w3-theme-d3" ><!-- Header -->
 <!-- <header class="w3-container w3-theme" id="myHeader"> -->
-<header class="w3-row w3-theme-d3" id="myHeader">
     <div class="w3-quarter">
         <a href="{% url 'logout' %}" class="w3-button w3-theme-action"> Logout</a>
     </div>
@@ -30,10 +29,11 @@
      $("input[name*='date']").datepicker({ dateFormat: 'yy-mm-dd' });
   } );
   </script>
-
+</div>
 </header>
 
-<div class="w3-container w3-padding">
+<div class="principal">
+
 {% if messages %}
     {% for msg in messages %}
         <div class="w3-orange" role="alert">
@@ -46,7 +46,6 @@
     {% endblock %}
 </div>
 
-<!-- Footer -->
 
 </div>
 
