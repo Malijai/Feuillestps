@@ -12,22 +12,17 @@
         </div>
     {% endfor %}
 {% endif %}
-
 <form method="POST" class="Entree-form" >
-
     <div class="w3-row">
         <div class="w3-half w3-center">
                 {% csrf_token %}
                 <table class="w3-table-all">
-
                     <tr><td>Contrat</td><td>{{ temps.contrat }}</td></tr>
                     <tr><td>Période</td><td>{{ temps.bonneperiode }}</td></tr>
                     <tr><td>Heures facturées</td><td>{{ temps.heures }}</td></tr>
                     <tr><td>Brut versé</td><td>{{ temps.brutperiode }}</td></tr>
                     <tr><td>Part de l'employeur calculée</td><td>{{ temps.partemployeur }}</td></tr>
-
                     {{ form.as_table }}
-
                 </table>
         </div>
     </div>
