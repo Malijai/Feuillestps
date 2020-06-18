@@ -18,15 +18,15 @@
          <td colspan="3"><b>Vacances dues ou payees <br />({{ contrat.vacancestaux|floatformat:2 }} %): {{vacances|floatformat:2}}$</b></td>
          <td colspan="2"><b>Temps facturé: {{totalheures}} heures</b></td>
          <td><b>Brut : {{totalbrut}}$</b></td>
-         <td colspan="2"><b>PE réelle : {{totalcharges}}$</b></td><td></td><td></td></tr>
+         <td colspan="3"><b>PE réelle : {{totalcharges}}$</b></td><td></td></tr>
     {% for ligne in touteslesannees %}
         <tr class="w3-theme-l3 w3-large">
            <td colspan="3">Bilan année fiscale : {{ ligne.0 }}</td>
            <td></td>
-           <td>{{ ligne.1|default:"0.0" }} heures</td>
-           <td>{{ ligne.2|default:"0.00" }}$</td>
-           <td colspan="2"> PE réelle : {{ ligne.3|default:"0.00" }}$</td>
-           <td></td><td></td>
+           <td>{{ ligne.1|default:"0.0"|floatformat:2 }} heures</td>
+           <td>{{ ligne.2|default:"0.00"|floatformat:2 }}$</td>
+           <td colspan="3"> PE réelle : {{ ligne.3|default:"0.00"|floatformat:2 }}$</td>
+           <td></td>
         </tr>
         <tr>
             <th>Période</th><th>année fiscale</th><th>Debut période</th><th>Commentaires</th>
@@ -40,11 +40,11 @@
              <td>{{temp.bonneperiode.anneefiscale}}</td>
              <td>{{temp.debutperiode}}</td>
              <td>{{temp.commentaire|default:""}}</td>
-             <td>{{temp.heures|default:"0.0"}}</td>
-             <td>{{temp.brutperiode|default:"0.00"}}$</td>
-             <td>{{temp.partemployeur|default:"0.00"}}$</td>
-             <td>{{temp.partemployeurcorr|default:"0.00"}}$</td>
-             <td>{{temp.vacances|default:"0.00"}}$</td>
+             <td>{{temp.heures|default:"0.0"|floatformat:2}}</td>
+             <td>{{temp.brutperiode|default:"0.00"|floatformat:2}}$</td>
+             <td>{{temp.partemployeur|default:"0.00"|floatformat:2}}$</td>
+             <td>{{temp.partemployeurcorr|default:"0.00"|floatformat:2}}$</td>
+             <td>{{temp.vacances|default:"0.00"|floatformat:2}}$</td>
              <td><a href="{% url 'correction_pe' temp.id %}" class="w3-button w3-amber">Corriger</a></td>
           </tr>
         {% endif %}

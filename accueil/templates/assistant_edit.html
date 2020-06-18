@@ -18,12 +18,12 @@
         <div class="w3-half w3-center">
             <h4>Pour sélectionner la signature demander aux assistants d'utiliser ce site et d'envoyer seulement la signature en jpg.
             https://www194.lunapic.com/editor/</h4>
-                {% csrf_token %}
-                <table class="w3-table-all">
-                    {{ form.as_table }}
+            {% csrf_token %}
+            <table class="w3-table-all">
+                {{ form.as_table }}
 
-                   {{ employe.as_table }}
-                </table>
+               {{ employe.as_table }}
+            </table>
         </div>
     </div>
     <div class="w3-center" style="overflow-x:auto;">
@@ -58,10 +58,10 @@
             {% endfor %}
         </table>
     </div>
+    <br />
         <button type="submit" class="w3-button w3-amber">Save</button>
         <button type="submit" class="w3-button w3-khaki " name="Savesurplace">Save and continue</button> ('Save and continue' enregistre et ajoute 2 lignes pour ajouter des contrats)
 </form>
 </div>
-
 {% endblock content %}
 
