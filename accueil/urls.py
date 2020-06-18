@@ -15,7 +15,6 @@ urlpatterns = [
     path('projet/', listeprojets, name='listeprojets'),
     path('correction/<int:pk>/', mise_a_jour_db, name='mise_a_jour_db'),
     path('correctionPE/<int:pk>/', correction_pe, name='correction_pe'),
-
 ]
 
 #url(r'^new/$', creerdossier, name='creerdossier'),

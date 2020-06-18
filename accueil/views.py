@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 from django.http import HttpResponse
 from django.contrib import messages
-from .models import Tempsfacture, Contratippm, Role, User, Employe, Projet, Periodes, Charges, Niveau
+from .models import Tempsfacture, Contratippm, Role, User, Employe, Projet, Periodes, Charges, Niveau, Secretaire
 from .forms import ContratFormSet, UserForm, EmployeForm, ProjetForm, TempsForm
 from reportlab.pdfgen.canvas import Canvas
 from django.core.files.storage import FileSystemStorage
@@ -119,6 +119,7 @@ def fdetemps(request):
         5: {'nom': "Vendredi", 'semaines': semaines},
         6: {'nom': "Samedi", 'semaines': semaines},
         }
+    secretaire =  Secretaire.objects.get(actif=True)
     img = ImageReader('media/Feuilledetemps2.jpg')
     x = 5
     y = 5
@@ -141,10 +142,10 @@ def fdetemps(request):
         commentaire = request.POST.get('commentaire')
         if contratid == "":
             messages.add_message(request, messages.ERROR, "Vous devez choisir un numéro de contrat")
-            return render(request, 'fdt.html', {'jours': jours})
+            return render(request, 'fdt.html', {'jours': jours, 'secretaire': secretaire})
         if date1 == "":
             messages.add_message(request, messages.ERROR, "Vous devez rentrer une date")
-            return render(request, 'fdt.html', {'jours': jours})
+            return render(request, 'fdt.html', {'jours': jours, 'secretaire': secretaire})
 
         detailcontrat = Contratippm.objects.get(pk=contratid)
         an, mois, jour = date1.split('-')
@@ -161,7 +162,7 @@ def fdetemps(request):
         if datefin < debut:
             messages.add_message(request, messages.ERROR,
                                  "Le contrat est terminé: " + detailcontrat.datefin.strftime('%d/%m/%Y'))
-            return render(request, 'fdt.html', {'jours': jours})
+            return render(request, 'fdt.html', {'jours': jours, 'secretaire': secretaire})
 
         date_debut = debut.strftime("%d-%m-%Y")
         date_fin = fin.strftime("%d-%m-%Y")
@@ -203,7 +204,7 @@ def fdetemps(request):
                 if temps_semaine > float(detailcontrat.maxheures):
                     messages.add_message(request, messages.ERROR,
                                          "Nombre maximum d'heures autorisées par semaine : " + detailcontrat.maxheures)
-                    return render(request, 'fdt.html', {'jours': jours})
+                    return render(request, 'fdt.html', {'jours': jours, 'secretaire': secretaire})
         doc.drawString(515, y_heures, str(somme_temps))
         textobject = doc.beginText(60, 160)
         wraped_text = "\n".join(wrap(commentaire, 90))  # 90 is line width
@@ -221,7 +222,6 @@ def fdetemps(request):
                                                         'partemployeur': partemployeur,
                                                         'brutperiode': brutperiode,
                                                         'vacances': vacances,
-
                                                         }
                                               )
         doc.save()
@@ -231,7 +231,7 @@ def fdetemps(request):
             response['Content-Disposition'] = 'attachment; filename="{}"'.format(nom_fichier)
         return response
     else:
-        return render(request, 'fdt.html', {'jours': jours})
+        return render(request, 'fdt.html', {'jours': jours, 'secretaire': secretaire})
 
 
 def calcul_salaire(tauxhoraire, somme_temps, debutperiode, tauxvacances):

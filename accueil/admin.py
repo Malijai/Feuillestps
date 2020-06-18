@@ -1,7 +1,17 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-from .models import Employe, Contratippm, Role, Tempsfacture
+from .models import Employe, Contratippm, Role, Tempsfacture, Secretaire, Periodes
+
+
+class PeriodesAdmin(admin.ModelAdmin):
+    model = Periodes
+    can_delete = False
+
+
+class SecretaireAdmin(admin.ModelAdmin):
+    model = Secretaire
+    can_delete = False
 
 
 class TempsInline(admin.StackedInline):
@@ -39,3 +49,5 @@ class TempsfactureAdmin(admin.ModelAdmin):
 admin.site.unregister(User)
 admin.site.register(User, TempsUserAdmin)
 admin.site.register(Tempsfacture, TempsfactureAdmin)
+admin.site.register(Secretaire, SecretaireAdmin)
+admin.site.register(Periodes, PeriodesAdmin)

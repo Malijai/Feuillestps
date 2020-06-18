@@ -2,6 +2,15 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+class Secretaire(models.Model):
+    nom = models.CharField(max_length=250, verbose_name="Personne à qui on adresse les feuilles de temps", unique=True)
+    courriel = models.CharField(max_length=250, verbose_name="Courriel où adresser les feuilles de temps", unique=True)
+    actif = models.BooleanField(default=True, verbose_name="Actif")
+
+    def __str__(self):
+        return '%s' % self.courriel
+
+
 class Employe(models.Model):
     user = models.OneToOneField(User, on_delete=models.DO_NOTHING)
     numeemploye = models.CharField(max_length=100, verbose_name="Numero d'employé IPPM", unique=True, null=True, blank=True)
@@ -59,7 +68,7 @@ class Tempsfacture(models.Model):
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     periode = models.IntegerField(verbose_name="Numero de la periode", null=True, blank=True)
     bonneperiode = models.ForeignKey(Periodes, on_delete=models.DO_NOTHING, verbose_name="Numero de la periode", )
-    heures = models.CharField(max_length=30, verbose_name="Nb d'heures facturées dans la période", null=True, blank=True)
+    heures = models.DecimalField(max_digits=4, decimal_places=2, verbose_name="Nb d'heures facturées dans la période", null=True, blank=True)
     contrat = models.ForeignKey(Contratippm, on_delete=models.DO_NOTHING)
     commentaire = models.CharField(max_length=250, null=True, blank=True)
     created_on = models.DateTimeField(auto_now_add=True)
