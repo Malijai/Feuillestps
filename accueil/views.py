@@ -120,7 +120,7 @@ def fdetemps(request):
         5: {'nom': "Vendredi", 'semaines': semaines},
         6: {'nom': "Samedi", 'semaines': semaines},
         }
-    secretaire =  Secretaire.objects.get(actif=True)
+    secretaire = Secretaire.objects.get(actif=True)
     img = ImageReader('media/Feuilledetemps2.jpg')
     x = 5
     y = 5
@@ -436,11 +436,13 @@ def calcule_couts(request):
     totalbrut = 0
     totalpartemployeur = 0
     totalvacances = 0
+    grandtotal = 0
     datedebut = ''
     datefin = ''
     heuressemaine = ''
     tauxhoraire = ''
     tauxvacances = ''
+
     if request.method == 'POST':
         datedebut = request.POST.get('datedebut')
         datefin = request.POST.get('datefin')
