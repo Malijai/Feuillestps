@@ -216,7 +216,7 @@ def fdetemps(request):
         debutperiode = debut.strftime("%Y-%m-%d")
         brutperiode, partemployeur, vacances = calcul_salaire(detailcontrat.tauxhoraire, somme_temps, debutperiode, detailcontrat.vacancestaux)
         # Enregistrement des donnees dans la BD
-        Tempsfacture.objects.update_or_create(user=request.user, bonneperiode=periode,
+        Tempsfacture.objects.update_or_create(user=request.user, bonneperiode=periode,contrat=contratid,
                                               defaults={'heures': somme_temps,
                                                         'contrat': detailcontrat,
                                                         'commentaire': commentaire,
