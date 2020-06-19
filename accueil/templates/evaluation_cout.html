@@ -1,0 +1,63 @@
+{% extends 'bilan_base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block contenuprincipal %}
+
+<div class="principal">
+{% if messages %}
+    {% for msg in messages %}
+        <div class="w3-orange" role="alert">
+        {{msg.message}}
+        </div>
+    {% endfor %}
+{% endif %}
+<form method="POST" class="Entree-form" >
+    <div class="w3-row">
+        <div class="w3-twothird w3-center">
+           {% csrf_token %}
+           <table class="w3-table-all">
+              {{ form.as_table }}
+           </table>
+        </div>
+    </div>
+    <button type="submit" class="w3-button w3-amber">Calculer</button>
+</form>
+     <div class="w3-row">
+        <div class="w3-twothird">
+            <h3>Evaluation des coûts du contrat avec les parametres suivants :</h3>
+            <ul>
+                <li>Date de début : {{ datedebut }} / Date de fin : {{ datefin }}</li>
+                 <li>Taux horaire : {{ tauxhoraire }}$</li>
+                 <li>Nombre maximum d'heures par semaine : {{ heuressemaine }}h</li>
+                 <li>Taux pour les vacances : {{ tauxvacances }}%</li>
+            </ul>
+               <table class="w3-table-all">
+                   <tr><td>Salaire Brut / semaine</td><td>{{ bruth|default:"0.0"|floatformat:2 }}$</td></tr>
+                    <tr><td>PE estimee / semaine</td><td>{{ partemployeurh|default:"0.0"|floatformat:2 }}$</td></tr>
+                    <tr><td>Vacances / semaine</td><td>{{ vacancesh|default:"0.0"|floatformat:2 }}$ </td></tr>
+                    <tr class="w3-light-blue"><td>Nombre de semaines</td><td>{{ nbsemaines}}</td></tr>
+                    <tr class="w3-pale-blue"><td>Salaire Brut total</td><td>{{ totalbrut|default:"0.0"|floatformat:2 }}$</td></tr>
+                    <tr class="w3-light-blue"><td>Total PE estimee</td><td>{{ totalpartemployeur|default:"0.0"|floatformat:2 }}$</td></tr>
+                    <tr class="w3-pale-blue"><td>Total vacances</td><td>{{ totalvacances|default:"0.0"|floatformat:2 }}$</td></tr>
+                    <tr class="w3-light-blue"><td><b>Total du contrat</b></td><td><b>{{ grandtotal|default:"0.0"|floatformat:2 }}$</b></td></tr>
+                </table>
+        </div>
+    </div>
+</div>
+<script>
+  $(function () {
+    $('[id^=id_date]').datepicker({
+      format:'dd-mm-yyyy',
+    });
+  });
+</script>
+
+{% endblock %}
+
+{% block titre %}
+<h3>Interface d'evaluation des couts d'un contrat</h3>
+{% endblock %}
+{% block pied %}
+<p>Interface d'evaluation des couts d'un contrat</p>
+{% endblock %}

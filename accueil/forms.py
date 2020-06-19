@@ -42,6 +42,14 @@ class TempsForm(forms.ModelForm):
         exclude = ('correction','partemployeur','bonneperiode','heures', 'contrat',)
 
 
+class EvaluationForm(forms.Form):
+    datedebut = forms.DateField(label='Date de debut')
+    datefin = forms.DateField(label='Date de fin')
+    heuressemaine = forms.IntegerField(label="Nombre maximum d'heures par semaine")
+    tauxhoraire = forms.DecimalField(label='Taux horaire')
+    tauxvacances = forms.DecimalField(label='% de vacances', help_text="Rentrer 4 pour 4%")
+
+
 ContratFormSet = inlineformset_factory(User, Contratippm, form= ContratippmForm,
                                          extra=2, can_delete=True)
 

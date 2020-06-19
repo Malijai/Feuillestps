@@ -8,10 +8,13 @@
 {% csrf_token %}
     <h2>{{ user.first_name }} {{ user.last_name }} </h2>
     <p>Date du debut de la periode: <input type="text" name="date" id="datepicker"></p>
-            <h3>Envoyez la feuille ainsi remplie à <a href="mailto:{{secretaire.courriel}}?subject=Feuille de temps {{ user.last_name }} {{ user.first_name }}"> {{secretaire.nom}}</a> et n'oubliez pas de mettre votre coordonnateur en cc</h3>
+            <h3>Envoyez la feuille ainsi remplie à
+                <a href="mailto:{{secretaire.courriel}}?subject=Feuille de temps {{ user.last_name }} {{ user.first_name }}">
+                 {{secretaire.nom}}</a> et n'oubliez pas de mettre votre coordonnateur en cc</h3>
 
     <div class="w3-row w3-theme-l3 ">
         <div class="w3-half w3-center">
+             <button type="submit" class="w3-button w3-amber">Imprimer la feuille de temps</button>
             <table>
                 <tr>
                     <td colspan="3">Choisir le projet associé à cette feuille de temps</td>
@@ -37,11 +40,10 @@
             <tr><td colspan="4">Description des services fournis (optionnel, 250 caractères max)</td></tr>
                 <tr><td colspan="4"><input type="text" name="commentaire" size="60" maxlength="250" ></td></tr>
             </table>
-        </div>
-        <div class="w3-quarter w3-center">
-            </br></br></br></br></br></br>
-            <button type="submit" class="btn-default">Imprimer la feuille de temps</button>
-        </div>
+
+
+
+</div>
     </div>
 </form>
 

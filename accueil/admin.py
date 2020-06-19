@@ -27,6 +27,19 @@ class AddInline(admin.StackedInline):
 class RolelInline(admin.StackedInline):
     model = Role
     can_delete = False
+    extra = 1
+    min_num = 1
+
+
+class UserRoleAdmin(UserAdmin):
+    inlines = (RolelInline,)
+    list_display = ('username', 'email','first_name', 'last_name', 'is_active', 'last_login')
+    list_filter = ('is_active',)
+
+    def get_inline_instances(self, request, obj=None):
+        if not obj:
+            return list()
+        return super(UserRoleAdmin, self).get_inline_instances(request,obj)
 
 
 class TempsUserAdmin(UserAdmin):
@@ -47,7 +60,7 @@ class TempsfactureAdmin(admin.ModelAdmin):
 
 
 admin.site.unregister(User)
-admin.site.register(User, TempsUserAdmin)
+admin.site.register(User, UserRoleAdmin)
 admin.site.register(Tempsfacture, TempsfactureAdmin)
 admin.site.register(Secretaire, SecretaireAdmin)
 admin.site.register(Periodes, PeriodesAdmin)

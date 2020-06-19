@@ -4,13 +4,14 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.contrib import messages
 from .models import Tempsfacture, Contratippm, Role, User, Employe, Projet, Periodes, Charges, Niveau, Secretaire
-from .forms import ContratFormSet, UserForm, EmployeForm, ProjetForm, TempsForm
+from .forms import ContratFormSet, UserForm, EmployeForm, ProjetForm, TempsForm, EvaluationForm
 from reportlab.pdfgen.canvas import Canvas
 from django.core.files.storage import FileSystemStorage
 from reportlab.lib.utils import ImageReader
 from reportlab.lib.pagesizes import letter
 from django.contrib.auth.decorators import login_required
 import datetime
+from datetime import timedelta
 import unicodedata
 from textwrap import wrap
 from django.db.models import Q, Sum, Count
@@ -235,7 +236,7 @@ def fdetemps(request):
 
 
 def calcul_salaire(tauxhoraire, somme_temps, debutperiode, tauxvacances):
-    brutperiode = decimal.Decimal(somme_temps) * tauxhoraire
+    brutperiode = decimal.Decimal(somme_temps) * decimal.Decimal(tauxhoraire)
     charge = Charges.objects.get(Q(datedebut__lte=debutperiode) & Q(datefin__gte=debutperiode))
     taux_autres = charge.fssttaux + charge.assemploitaux + charge.rqaptaux + charge.cnesttaux
     partemployeur1 = decimal.Decimal(brutperiode * (taux_autres /100))
@@ -244,7 +245,7 @@ def calcul_salaire(tauxhoraire, somme_temps, debutperiode, tauxvacances):
         partemployeur2 = decimal.Decimal(brutperiode - exemptionrrq) * decimal.Decimal(charge.rrqtaux /100)
     else:
         partemployeur2 = 0
-    vacances = decimal.Decimal(brutperiode) * decimal.Decimal(tauxvacances /100)
+    vacances = decimal.Decimal(brutperiode) * decimal.Decimal(decimal.Decimal(tauxvacances) /100)
     partemployeur = partemployeur1 + partemployeur2
     return brutperiode, partemployeur, vacances
 
@@ -424,3 +425,58 @@ def mise_a_jour_db(request, pk):
                                                     }
                                           )
     return redirect('listeassistants')
+
+
+def calcule_couts(request):
+    form_class = EvaluationForm
+    nbsemaines = 0
+    bruth = 0
+    partemployeurh = 0
+    vacancesh = 0
+    totalbrut = 0
+    totalpartemployeur = 0
+    totalvacances = 0
+    datedebut = ''
+    datefin = ''
+    heuressemaine = ''
+    tauxhoraire = ''
+    tauxvacances = ''
+    if request.method == 'POST':
+        datedebut = request.POST.get('datedebut')
+        datefin = request.POST.get('datefin')
+        heuressemaine = request.POST.get('heuressemaine')
+        tauxhoraire = request.POST.get('tauxhoraire')
+        tauxvacances = request.POST.get('tauxvacances')
+        jourdeb, moisdeb, andeb = datedebut.split('-')
+        semainedeb_rentree = datetime.date(int(andeb), int(moisdeb), int(jourdeb))
+        jourfin, moisfin, anfin = datefin.split('-')
+        semainefin_rentree = datetime.date(int(anfin), int(moisfin), int(jourfin))
+        monday1 = (semainedeb_rentree - timedelta(days=semainedeb_rentree.weekday()))
+        monday2 = (semainefin_rentree - timedelta(days=semainefin_rentree.weekday()))
+        nbsemaines = (monday2 - monday1).days / 7
+        bruth, partemployeurh, vacancesh = calcul_salaire(decimal.Decimal(tauxhoraire),
+                                                          decimal.Decimal(heuressemaine),
+                                                          semainedeb_rentree,
+                                                          decimal.Decimal(tauxvacances))
+        totalbrut = bruth * decimal.Decimal(nbsemaines)
+        totalpartemployeur = partemployeurh * decimal.Decimal(nbsemaines)
+        totalvacances = decimal.Decimal(vacancesh) * decimal.Decimal(nbsemaines)
+        grandtotal = totalvacances + totalpartemployeur + totalbrut
+    else:
+        form_class = EvaluationForm()
+
+    return render(request, 'evaluation_cout.html', {'form': form_class,
+                                                    'datedebut': datedebut,
+                                                    'datefin': datefin,
+                                                    'heuressemaine': heuressemaine,
+                                                    'tauxhoraire': tauxhoraire,
+                                                    'tauxvacances': tauxvacances,
+                                                    'nbsemaines': nbsemaines,
+                                                    'bruth': bruth,
+                                                    'partemployeurh': partemployeurh,
+                                                    'vacancesh': vacancesh,
+                                                    'totalbrut': totalbrut,
+                                                    'totalpartemployeur': totalpartemployeur,
+                                                    'totalvacances': totalvacances,
+                                                    'grandtotal': grandtotal,
+                                                    })

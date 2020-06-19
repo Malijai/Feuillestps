@@ -92,7 +92,7 @@ class Role(models.Model):
         (ADMIN, 'Administrateur'),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    role = models.PositiveSmallIntegerField(choices=ROLES_CHOICES, verbose_name="Roles", default=1)
+    role = models.PositiveSmallIntegerField(choices=ROLES_CHOICES, verbose_name="Roles")
     # mettre RA par defaut
 
     def __str__(self):
