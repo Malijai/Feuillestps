@@ -256,7 +256,7 @@ def calcul_salaire(tauxhoraire, somme_temps, debutperiode, tauxvacances):
         partemployeur2 = 0
     vacances1 = decimal.Decimal(brutperiode) * decimal.Decimal(decimal.Decimal(tauxvacances) /100)
     partemployeur = partemployeur1 + partemployeur2
-    vacances = vacances1 +vacances1 * partemployeur
+    vacances = vacances1 + (decimal.Decimal(decimal.Decimal(tauxvacances) /100) * partemployeur)
     rrq = partemployeur2
     return brutperiode, partemployeur, vacances, rrq, cnes, fsst, rqap, assemploi
 
