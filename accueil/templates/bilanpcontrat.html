@@ -12,13 +12,14 @@
 <h2>{{ contrat.user.last_name }}, {{ contrat.user.first_name }}</h2>
     <h4>Budget # {{contrat.projet.budget}} {{contrat.projet.nomlong}} ({{contrat.projet.nomcourt}})</h4>
   <table class="w3-table-all">
-         <tr class="w3-theme-d2"><td colspan="10"><b>Totaux du contrat  #{{contrat.numcontrat}} ({{contrat.datedebut}}, {{contrat.datefin}}) </b></td>
-        </tr>
-        <tr class="w3-theme-d2">
-         <td colspan="3"><b>Vacances dues ou payees <br />({{ contrat.vacancestaux|floatformat:2 }} %): {{vacances|floatformat:2}}$</b></td>
-         <td colspan="2"><b>Temps facturé: {{totalheures}} heures</b></td>
-         <td><b>Brut : {{totalbrut}}$</b></td>
-         <td colspan="3"><b>PE réelle : {{totalcharges}}$</b></td><td></td></tr>
+    <tr class="w3-theme-d2"><td colspan="16"><b>Totaux du contrat  #{{contrat.numcontrat}} ({{contrat.datedebut}}, {{contrat.datefin}}) </b></td>
+    </tr>
+    <tr class="w3-theme-d2">
+    <td colspan="3"><b>Vacances dues ou payees <br />({{ contrat.vacancestaux|floatformat:2 }} %): {{vacances|floatformat:2}}$</b></td>
+    <td colspan="2"><b>Temps facturé: {{totalheures}} heures</b></td>
+    <td><b>Brut : {{totalbrut}}$</b></td>
+    <td colspan="3"><b>PE réelle : {{totalcharges}}$</b></td>
+    <td colspan="6"></td></tr>
     {% for ligne in touteslesannees %}
         <tr class="w3-theme-l3 w3-large">
            <td colspan="3">Bilan année fiscale : {{ ligne.0 }}</td>
@@ -26,11 +27,12 @@
            <td>{{ ligne.1|default:"0.0"|floatformat:2 }} heures</td>
            <td>{{ ligne.2|default:"0.00"|floatformat:2 }}$</td>
            <td colspan="3"> PE réelle : {{ ligne.3|default:"0.00"|floatformat:2 }}$</td>
-           <td></td>
+           <td colspan="6">Détails des montants estimés en fonction des taux officiels</td>
         </tr>
         <tr>
             <th>Période</th><th>année fiscale</th><th>Debut période</th><th>Commentaires</th>
-            <th>Temps facturé</th><th>Salaire brut</th><th>PE estimée</th><th>PE corrigée</th><th>Vacances</th>
+            <th>Temps facturé</th><th>Salaire brut</th><th>PE corrigée</th><th>Vacances</th><th>PE estimée</th>
+            <th>RRQ</th><th>CNES</th><th>FSST</th><th>RQAP</th><th>ASS.Emp</th>
             <th>Action</th>
         </tr>
       {% for temp in temps %}
@@ -42,9 +44,14 @@
              <td>{{temp.commentaire|default:""}}</td>
              <td>{{temp.heures|default:"0.0"|floatformat:2}}</td>
              <td>{{temp.brutperiode|default:"0.00"|floatformat:2}}$</td>
-             <td>{{temp.partemployeur|default:"0.00"|floatformat:2}}$</td>
              <td>{{temp.partemployeurcorr|default:"0.00"|floatformat:2}}$</td>
              <td>{{temp.vacances|default:"0.00"|floatformat:2}}$</td>
+             <td>{{temp.partemployeur|default:"0.00"|floatformat:2}}$</td>
+              <td class="w3-theme-l4">{{temp.rrq|default:"0.00"|floatformat:2}}$</td>
+             <td>{{temp.cnes|default:"0.00"|floatformat:2}}$</td>
+             <td class="w3-theme-l4">{{temp.fsst|default:"0.00"|floatformat:2}}$</td>
+             <td>{{temp.rqap|default:"0.00"|floatformat:2}}$</td>
+             <td class="w3-theme-l4">{{temp.assemploi|default:"0.00"|floatformat:2}}$</td>
              <td><a href="{% url 'correction_pe' temp.id %}" class="w3-button w3-amber">Corriger</a></td>
           </tr>
         {% endif %}

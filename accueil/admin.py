@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-from .models import Employe, Contratippm, Role, Tempsfacture, Secretaire, Periodes
+from .models import Employe, Contratippm, Role, Tempsfacture, Secretaire, Periodes, Charges
 
 
 class PeriodesAdmin(admin.ModelAdmin):
@@ -59,8 +59,15 @@ class TempsfactureAdmin(admin.ModelAdmin):
     list_display = ('user', 'contrat', 'periode', 'brutperiode', 'partemployeur', 'partemployeurcorr')
 
 
+class ChargesAdmin(admin.ModelAdmin):
+    model = Charges
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 admin.site.unregister(User)
 admin.site.register(User, UserRoleAdmin)
 admin.site.register(Tempsfacture, TempsfactureAdmin)
 admin.site.register(Secretaire, SecretaireAdmin)
 admin.site.register(Periodes, PeriodesAdmin)
+admin.site.register(Charges, ChargesAdmin)

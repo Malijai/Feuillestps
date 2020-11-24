@@ -46,7 +46,7 @@ def choix(request):
 
 @login_required(login_url=settings.LOGIN_URI)
 def listeassistants(request):
-    assistants = Role.objects.filter(role=1).order_by('user__last_name')
+    assistants = Role.objects.filter(role=1).order_by('-user__is_active','user__last_name')
     return render(request, 'liste.html', {'RAs': assistants})
 
 
@@ -214,15 +214,20 @@ def fdetemps(request):
         doc.drawText(textobject)
         # Calculs pour enregistrement des donnees dans la BD
         debutperiode = debut.strftime("%Y-%m-%d")
-        brutperiode, partemployeur, vacances = calcul_salaire(detailcontrat.tauxhoraire, somme_temps, debutperiode, detailcontrat.vacancestaux)
+        brutperiode, partemployeur, vacances, rrq, cnes, fsst, rqap, assemploi = calcul_salaire(detailcontrat.tauxhoraire, somme_temps, debutperiode, detailcontrat.vacancestaux)
         # Enregistrement des donnees dans la BD
-        Tempsfacture.objects.update_or_create(user=request.user, bonneperiode=periode,contrat=contratid,
+        Tempsfacture.objects.update_or_create(user=request.user, bonneperiode=periode, contrat=contratid,
                                               defaults={'heures': somme_temps,
                                                         'contrat': detailcontrat,
                                                         'commentaire': commentaire,
                                                         'partemployeur': partemployeur,
                                                         'brutperiode': brutperiode,
                                                         'vacances': vacances,
+                                                        'rrq': rrq,
+                                                        'cnes': cnes,
+                                                        'fsst': fsst,
+                                                        'rqap': rqap ,
+                                                        'assemploi': assemploi
                                                         }
                                               )
         doc.save()
@@ -239,15 +244,21 @@ def calcul_salaire(tauxhoraire, somme_temps, debutperiode, tauxvacances):
     brutperiode = decimal.Decimal(somme_temps) * decimal.Decimal(tauxhoraire)
     charge = Charges.objects.get(Q(datedebut__lte=debutperiode) & Q(datefin__gte=debutperiode))
     taux_autres = charge.fssttaux + charge.assemploitaux + charge.rqaptaux + charge.cnesttaux
+    cnes = decimal.Decimal(brutperiode * (charge.cnesttaux/100))
+    fsst = decimal.Decimal(brutperiode * (charge.fssttaux/100))
+    rqap = decimal.Decimal(brutperiode * (charge.rqaptaux/100))
+    assemploi = decimal.Decimal(brutperiode * (charge.assemploitaux/100))
     partemployeur1 = decimal.Decimal(brutperiode * (taux_autres /100))
     exemptionrrq = decimal.Decimal(charge.rrqexemption / 27)
     if brutperiode > exemptionrrq:
         partemployeur2 = decimal.Decimal(brutperiode - exemptionrrq) * decimal.Decimal(charge.rrqtaux /100)
     else:
         partemployeur2 = 0
-    vacances = decimal.Decimal(brutperiode) * decimal.Decimal(decimal.Decimal(tauxvacances) /100)
+    vacances1 = decimal.Decimal(brutperiode) * decimal.Decimal(decimal.Decimal(tauxvacances) /100)
     partemployeur = partemployeur1 + partemployeur2
-    return brutperiode, partemployeur, vacances
+    vacances = vacances1 +vacances1 * partemployeur
+    rrq = partemployeur2
+    return brutperiode, partemployeur, vacances, rrq, cnes, fsst, rqap, assemploi
 
 
 @login_required(login_url=settings.LOGIN_URI)
@@ -257,10 +268,12 @@ def bilanparcontrat(request, cid):
     if temps:
         touteslesannees = []
         tempscontrat0 = Tempsfacture.objects.filter(Q(correction=0) & Q(contrat=contrat))\
-            .aggregate(h0=Sum('heures'), b0=Sum('brutperiode'), pe0=Sum('partemployeur'), v0=Sum('vacances'))
+            .aggregate(h0=Sum('heures'), b0=Sum('brutperiode'), pe0=Sum('partemployeur'), v0=Sum('vacances'),
+                       rrq0=Sum('rrq'), cnes0=Sum('cnes'), fst0=Sum('fsst'), rqap0=Sum('rqap'), ae0=Sum('assemploi'))
         tempscontrat1 = Tempsfacture.objects.filter(Q(correction=1) & Q(contrat=contrat)) \
-            .aggregate(h1=Sum('heures'), b1=Sum('brutperiode'), pe1=Sum('partemployeurcorr'), v1=Sum('vacances'))
-        totalheures, totalbrut, totalcharges, totalvacances = fait_totaux(tempscontrat0, tempscontrat1)
+            .aggregate(h1=Sum('heures'), b1=Sum('brutperiode'), pe1=Sum('partemployeurcorr'), v1=Sum('vacances'),
+                       rrq1=Sum('rrq'), cnes1=Sum('cnes'), fst1=Sum('fsst'), rqap1=Sum('rqap'), ae1=Sum('assemploi'))
+        totalheures, totalbrut, totalcharges, totalvacances, totalrrq, totalcnes, totalfst, totalrqap, totalassemploi = fait_totaux(tempscontrat0, tempscontrat1)
 
         anneesfiscales = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(Q(contrat=contrat))\
                         .distinct()
@@ -269,16 +282,23 @@ def bilanparcontrat(request, cid):
             anneef = annee['bonneperiode__anneefiscale']
 
             anneefiscale0 = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(Q(correction=0) & Q(contrat=contrat) & Q(bonneperiode__anneefiscale=anneef)) \
-                    .aggregate(h0=Sum('heures'), b0=Sum('brutperiode'), pe0=Sum('partemployeur'), v0=Sum('vacances'))
+                    .aggregate(h0=Sum('heures'), b0=Sum('brutperiode'), pe0=Sum('partemployeur'), v0=Sum('vacances'),
+                               rrq0=Sum('rrq'), cnes0=Sum('cnes'), fst0=Sum('fsst'), rqap0=Sum('rqap'), ae0=Sum('assemploi'))
             anneefiscale1 = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(Q(correction=1) & Q(contrat=contrat) & Q(bonneperiode__anneefiscale=anneef)) \
-                    .aggregate(h1=Sum('heures'), b1=Sum('brutperiode'), pe1=Sum('partemployeurcorr'), v1=Sum('vacances'))
+                    .aggregate(h1=Sum('heures'), b1=Sum('brutperiode'), pe1=Sum('partemployeurcorr'), v1=Sum('vacances'),
+                               rrq1=Sum('rrq'), cnes1=Sum('cnes'), fst1=Sum('fsst'), rqap1=Sum('rqap'), ae1=Sum('assemploi'))
 
-            totalheuresa, totalbruta, totalchargesa, totalvacancesa = fait_totaux(anneefiscale0, anneefiscale1)
+            totalheuresa, totalbruta, totalchargesa, totalvacancesa, totalrrq, totalcnes, totalfst, totalrqap, totalassemploi = fait_totaux(anneefiscale0, anneefiscale1)
             ligneannee.append(anneef)
             ligneannee.append(totalheuresa)
             ligneannee.append(totalbruta)
             ligneannee.append(totalchargesa)
             ligneannee.append(totalvacancesa)
+            ligneannee.append(totalrrq)
+            ligneannee.append(totalcnes)
+            ligneannee.append(totalfst)
+            ligneannee.append(totalrqap)
+            ligneannee.append(totalassemploi)
             touteslesannees.append(ligneannee)
 
         return render(request, "bilanpcontrat.html", {'contrat': contrat,
@@ -298,17 +318,33 @@ def fait_totaux(noncorrigee, corrigee):
     totalbruta = noncorrigee['b0']
     totalchargesa = noncorrigee['pe0']
     totalvacances = noncorrigee['v0']
+    totalrrq = noncorrigee['rrq0']
+    totalcnes = noncorrigee['cnes0']
+    totalfst = noncorrigee['fst0']
+    totalrqap = noncorrigee['rqap0']
+    totalassemploi = noncorrigee['ae0']
+
     if totalheuresa is None:
         totalheuresa = 0
         totalbruta = 0
         totalchargesa = 0
         totalvacances = 0
+        totalrrq = 0
+        totalcnes = 0
+        totalfst = 0
+        totalrqap = 0
+        totalassemploi = 0
     if corrigee['h1'] is not None:
         totalheuresa = totalheuresa + corrigee['h1']
         totalbruta = totalbruta + corrigee['b1']
         totalchargesa = totalchargesa + corrigee['pe1']
         totalvacances = totalvacances + corrigee['v1']
-    return totalheuresa,totalbruta, totalchargesa, totalvacances
+        totalrrq = totalrrq + corrigee['rrq1']
+        totalcnes = totalcnes + corrigee['cnes1']
+        totalfst = totalfst + corrigee['fst1']
+        totalrqap = totalrqap + corrigee['rqap1']
+        totalassemploi = totalassemploi + corrigee['ae1']
+    return totalheuresa,totalbruta, totalchargesa, totalvacances, totalrrq, totalcnes, totalfst, totalrqap, totalassemploi
 
 
 @login_required(login_url=settings.LOGIN_URI)
@@ -349,11 +385,13 @@ def bilanparprojet(request, pid):
             anneef = annee['bonneperiode__anneefiscale']
             anneefiscale0 = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(
                 Q(correction=0) & Q(contrat__in=contrats) & Q(contrat__niveau=niveau) & Q(bonneperiode__anneefiscale=anneef)) \
-                .aggregate(h0=Sum('heures'), b0=Sum('brutperiode'), pe0=Sum('partemployeur'), v0=Sum('vacances'))
+                .aggregate(h0=Sum('heures'), b0=Sum('brutperiode'), pe0=Sum('partemployeur'), v0=Sum('vacances'),
+                           rrq0=Sum('rrq'), cnes0=Sum('cnes'), fst0=Sum('fsst'), rqap0=Sum('rqap'), ae0=Sum('assemploi'))
             anneefiscale1 = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(
                 Q(correction=1) & Q(contrat__in=contrats) & Q(contrat__niveau=niveau)  & Q(bonneperiode__anneefiscale=anneef)) \
-                .aggregate(h1=Sum('heures'), b1=Sum('brutperiode'), pe1=Sum('partemployeurcorr'), v1=Sum('vacances'))
-            totalheuresa, totalbruta, totalchargesa, totalvacances = fait_totaux(anneefiscale0, anneefiscale1)
+                .aggregate(h1=Sum('heures'), b1=Sum('brutperiode'), pe1=Sum('partemployeurcorr'), v1=Sum('vacances'),
+                           rrq1=Sum('rrq'), cnes1=Sum('cnes'), fst1=Sum('fsst'), rqap1=Sum('rqap'), ae1=Sum('assemploi'))
+            totalheuresa, totalbruta, totalchargesa, totalvacances, totalrrq, totalcnes, totalfst, totalrqap, totalassemploi = fait_totaux(anneefiscale0, anneefiscale1)
             niveau_nom = Niveau.objects.get(pk=niveau)
             ligneniveau.append(anneef)
             ligneniveau.append(totalheuresa)
@@ -366,16 +404,19 @@ def bilanparprojet(request, pid):
         anneef = annee['bonneperiode__anneefiscale']
         anneefiscale0 = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(
                 Q(correction=0) & Q(contrat__in = contrats) & Q(bonneperiode__anneefiscale=anneef)) \
-                .aggregate(h0=Sum('heures'), b0=Sum('brutperiode'), pe0=Sum('partemployeur'), v0=Sum('vacances'))
+                .aggregate(h0=Sum('heures'), b0=Sum('brutperiode'), pe0=Sum('partemployeur'), v0=Sum('vacances'),
+                   rrq0=Sum('rrq'), cnes0=Sum('cnes'), fst0=Sum('fsst'), rqap0=Sum('rqap'), ae0=Sum('assemploi'))
         anneefiscale1 = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(
                 Q(correction=1) & Q(contrat__in = contrats) & Q(bonneperiode__anneefiscale=anneef)) \
-                .aggregate(h1=Sum('heures'), b1=Sum('brutperiode'), pe1=Sum('partemployeurcorr'), v1=Sum('vacances'))
-        totalheuresa, totalbruta, totalchargesa, totalvacances = fait_totaux(anneefiscale0, anneefiscale1)
+                .aggregate(h1=Sum('heures'), b1=Sum('brutperiode'), pe1=Sum('partemployeurcorr'), v1=Sum('vacances'),
+                           rrq1=Sum('rrq'), cnes1=Sum('cnes'), fst1=Sum('fsst'), rqap1=Sum('rqap'),
+                           ae1=Sum('assemploi'))
+        totalheuresa, totalbruta, totalchargesa, totalvacancesa, totalrrq, totalcnes, totalfst, totalrqap, totalassemploi = fait_totaux(anneefiscale0, anneefiscale1)
         ligneannee.append(anneef)
         ligneannee.append(totalheuresa)
         ligneannee.append(totalbruta)
         ligneannee.append(totalchargesa)
-        ligneannee.append(totalvacances)
+        ligneannee.append(totalvacancesa)
         touteslesannees.append(ligneannee)
 
     return render(request, 'bilanpprojet.html', {'contrats': contrats,
@@ -415,13 +456,23 @@ def mise_a_jour_db(request, pk):
             brutperiode = 0
             partemployeur = 0
             vacances = 0
+            rrq = 0
+            cnes = 0
+            fsst = 0
+            rqap = 0
+            assemploi = 0
             taux = tps.contrat.tauxhoraire
-            brutperiode, partemployeur, vacances = calcul_salaire(taux, tps.heures, tps.debutperiode, tps.contrat.vacancestaux)
+            brutperiode, partemployeur, vacances, rrq, cnes, fsst, rqap, assemploi = calcul_salaire(taux, tps.heures, tps.bonneperiode.datedebut, tps.contrat.vacancestaux)
 
             Tempsfacture.objects.update_or_create(id=tps.id,
                                             defaults={'partemployeur': partemployeur,
                                                        'brutperiode': brutperiode,
-                                                       'vacances': vacances
+                                                       'vacances': vacances,
+                                                       'rrq': rrq,
+                                                       'cnes': cnes,
+                                                       'fsst': fsst,
+                                                       'rqap': rqap,
+                                                       'assemploi': assemploi
                                                     }
                                           )
     return redirect('listeassistants')
@@ -456,7 +507,7 @@ def calcule_couts(request):
         monday1 = (semainedeb_rentree - timedelta(days=semainedeb_rentree.weekday()))
         monday2 = (semainefin_rentree - timedelta(days=semainefin_rentree.weekday()))
         nbsemaines = (monday2 - monday1).days / 7
-        bruth, partemployeurh, vacancesh = calcul_salaire(decimal.Decimal(tauxhoraire),
+        bruth, partemployeurh, vacancesh, rrq, cnes, fsst, rqap, assemploi = calcul_salaire(decimal.Decimal(tauxhoraire),
                                                           decimal.Decimal(heuressemaine),
                                                           semainedeb_rentree,
                                                           decimal.Decimal(tauxvacances))

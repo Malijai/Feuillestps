@@ -79,6 +79,11 @@ class Tempsfacture(models.Model):
     correction = models.IntegerField(default=0)
     vacances = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Vacances calculées")
     updated_on = models.DateTimeField(auto_now=True)
+    rrq = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="RRQ")
+    cnes = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="CNES")
+    fsst = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="FSST")
+    rqap = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="RQAP")
+    assemploi = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Ass Emplois")
 
     def __str__(self):
         return '%s' % self.user
@@ -105,9 +110,12 @@ class Charges(models.Model):
     rrqmax = models.IntegerField(verbose_name="RRQ : salaire cotisable maximal")
     cnesttaux = models.DecimalField(max_digits=5, decimal_places=3, verbose_name="Taux CNEST (%)")
     fssttaux = models.DecimalField(max_digits=5, decimal_places=3, verbose_name="Taux FSS (%)")
-    assemploitaux = models.DecimalField(max_digits=5, decimal_places=3, verbose_name="Assurance emploi taux plein")
-    assemploimax = models.IntegerField(verbose_name="Assurance emploi : salaire cotisable maximal")
+    assemploitaux = models.DecimalField(max_digits=5, decimal_places=3, verbose_name="Assurance emploi - taux plein")
+    assemploimax = models.IntegerField(verbose_name="Assurance emploi - salaire cotisable maximal")
     rqaptaux = models.DecimalField(max_digits=5, decimal_places=3, verbose_name="Taux RQAP (%)")
-    rqapmax = models.IntegerField(verbose_name="RQAP : salaire cotisable maximal")
-    datedebut = models.DateField(default="2000-01-01")
-    datefin = models.DateField(default="2000-01-01")
+    rqapmax = models.IntegerField(verbose_name="RQAP - salaire cotisable maximal")
+    datedebut = models.DateField(default="2000-01-01", verbose_name="Date de début des taux")
+    datefin = models.DateField(default="2000-01-01", verbose_name="Date de fin des taux")
+
+    def __str__(self):
+        return '{0} - {1}'.format(self.datedebut, self.datefin)
