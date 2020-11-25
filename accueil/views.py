@@ -214,7 +214,7 @@ def fdetemps(request):
         doc.drawText(textobject)
         # Calculs pour enregistrement des donnees dans la BD
         debutperiode = debut.strftime("%Y-%m-%d")
-        brutperiode, partemployeur, vacances, rrq, cnes, fsst, rqap, assemploi = calcul_salaire(detailcontrat.tauxhoraire, somme_temps, debutperiode, detailcontrat.vacancestaux)
+        brutperiode, partemployeur, vacances, rrq, cnes, fsst, rqap, assemploi = calcul_salaire(detailcontrat.tauxhoraire, somme_temps, debutperiode, detailcontrat.vacancestaux,0)
         # Enregistrement des donnees dans la BD
         Tempsfacture.objects.update_or_create(user=request.user, bonneperiode=periode, contrat=contratid,
                                               defaults={'heures': somme_temps,
@@ -240,23 +240,29 @@ def fdetemps(request):
         return render(request, 'fdt.html', {'jours': jours, 'secretaire': secretaire})
 
 
-def calcul_salaire(tauxhoraire, somme_temps, debutperiode, tauxvacances):
+def calcul_salaire(tauxhoraire, somme_temps, debutperiode, tauxvacances, eval):
     brutperiode = decimal.Decimal(somme_temps) * decimal.Decimal(tauxhoraire)
     charge = Charges.objects.get(Q(datedebut__lte=debutperiode) & Q(datefin__gte=debutperiode))
+    # Tous les taux additionnés SAUF la rrq
     taux_autres = charge.fssttaux + charge.assemploitaux + charge.rqaptaux + charge.cnesttaux
     cnes = decimal.Decimal(brutperiode * (charge.cnesttaux/100))
     fsst = decimal.Decimal(brutperiode * (charge.fssttaux/100))
     rqap = decimal.Decimal(brutperiode * (charge.rqaptaux/100))
     assemploi = decimal.Decimal(brutperiode * (charge.assemploitaux/100))
+    #partemployeur1 = tout SAUF la rrq
     partemployeur1 = decimal.Decimal(brutperiode * (taux_autres /100))
-    exemptionrrq = decimal.Decimal(charge.rrqexemption / 27)
+    if eval == 1:           # Si calcul par semaine au lieu de par période
+        exemptionrrq = decimal.Decimal(charge.rrqexemption / 52)
+    else:
+        exemptionrrq = decimal.Decimal(charge.rrqexemption / 27)
     if brutperiode > exemptionrrq:
         partemployeur2 = decimal.Decimal(brutperiode - exemptionrrq) * decimal.Decimal(charge.rrqtaux /100)
     else:
         partemployeur2 = 0
     vacances1 = decimal.Decimal(brutperiode) * decimal.Decimal(decimal.Decimal(tauxvacances) /100)
     partemployeur = partemployeur1 + partemployeur2
-    vacances = vacances1 + (decimal.Decimal(decimal.Decimal(tauxvacances) /100) * partemployeur)
+    # Il n'y a pas la rrq dans les vacances
+    vacances = vacances1 + (decimal.Decimal(decimal.Decimal(tauxvacances) /100) * partemployeur1)
     rrq = partemployeur2
     return brutperiode, partemployeur, vacances, rrq, cnes, fsst, rqap, assemploi
 
@@ -323,7 +329,6 @@ def fait_totaux(noncorrigee, corrigee):
     totalfst = noncorrigee['fst0']
     totalrqap = noncorrigee['rqap0']
     totalassemploi = noncorrigee['ae0']
-
     if totalheuresa is None:
         totalheuresa = 0
         totalbruta = 0
@@ -400,7 +405,6 @@ def bilanparprojet(request, pid):
             ligneniveau.append(totalvacances)
             ligneniveau.append(niveau_nom.reponse)
             touslesniveaux.append(ligneniveau)
-
         anneef = annee['bonneperiode__anneefiscale']
         anneefiscale0 = Tempsfacture.objects.values('bonneperiode__anneefiscale').filter(
                 Q(correction=0) & Q(contrat__in = contrats) & Q(bonneperiode__anneefiscale=anneef)) \
@@ -418,7 +422,6 @@ def bilanparprojet(request, pid):
         ligneannee.append(totalchargesa)
         ligneannee.append(totalvacancesa)
         touteslesannees.append(ligneannee)
-
     return render(request, 'bilanpprojet.html', {'contrats': contrats,
                                                  'temps': tempstous,
                                                  'touteslesannees': touteslesannees,
@@ -449,6 +452,7 @@ def correction_pe(request, pk):
 
 
 def mise_a_jour_db(request, pk):
+    #Utilisé juste lors de l'ajout des champs du détail des charges sociales ...
     contrats = Contratippm.objects.filter(projet=pk)
     for contrat in contrats:
         temps = Tempsfacture.objects.filter(contrat=contrat)
@@ -462,8 +466,7 @@ def mise_a_jour_db(request, pk):
             rqap = 0
             assemploi = 0
             taux = tps.contrat.tauxhoraire
-            brutperiode, partemployeur, vacances, rrq, cnes, fsst, rqap, assemploi = calcul_salaire(taux, tps.heures, tps.bonneperiode.datedebut, tps.contrat.vacancestaux)
-
+            brutperiode, partemployeur, vacances, rrq, cnes, fsst, rqap, assemploi = calcul_salaire(taux, tps.heures, tps.bonneperiode.datedebut, tps.contrat.vacancestaux, 0)
             Tempsfacture.objects.update_or_create(id=tps.id,
                                             defaults={'partemployeur': partemployeur,
                                                        'brutperiode': brutperiode,
@@ -493,7 +496,6 @@ def calcule_couts(request):
     heuressemaine = ''
     tauxhoraire = ''
     tauxvacances = ''
-
     if request.method == 'POST':
         datedebut = request.POST.get('datedebut')
         datefin = request.POST.get('datefin')
@@ -510,14 +512,13 @@ def calcule_couts(request):
         bruth, partemployeurh, vacancesh, rrq, cnes, fsst, rqap, assemploi = calcul_salaire(decimal.Decimal(tauxhoraire),
                                                           decimal.Decimal(heuressemaine),
                                                           semainedeb_rentree,
-                                                          decimal.Decimal(tauxvacances))
+                                                          decimal.Decimal(tauxvacances),1)
         totalbrut = bruth * decimal.Decimal(nbsemaines)
         totalpartemployeur = partemployeurh * decimal.Decimal(nbsemaines)
         totalvacances = decimal.Decimal(vacancesh) * decimal.Decimal(nbsemaines)
         grandtotal = totalvacances + totalpartemployeur + totalbrut
     else:
         form_class = EvaluationForm()
-
     return render(request, 'evaluation_cout.html', {'form': form_class,
                                                     'datedebut': datedebut,
                                                     'datefin': datefin,
