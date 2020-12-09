@@ -254,7 +254,7 @@ def calcul_salaire(tauxhoraire, somme_temps, debutperiode, tauxvacances, eval):
     if eval == 1:           # Si calcul par semaine au lieu de par période
         exemptionrrq = decimal.Decimal(charge.rrqexemption / 52)
     else:
-        exemptionrrq = decimal.Decimal(charge.rrqexemption / 27)
+        exemptionrrq = decimal.Decimal(charge.rrqexemption / charge.nbperiodes)
     if brutperiode > exemptionrrq:
         partemployeur2 = decimal.Decimal(brutperiode - exemptionrrq) * decimal.Decimal(charge.rrqtaux /100)
     else:

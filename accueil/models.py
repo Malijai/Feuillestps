@@ -116,6 +116,7 @@ class Charges(models.Model):
     rqapmax = models.IntegerField(verbose_name="RQAP - salaire cotisable maximal")
     datedebut = models.DateField(default="2000-01-01", verbose_name="Date de début des taux")
     datefin = models.DateField(default="2000-01-01", verbose_name="Date de fin des taux")
+    nbperiodes = models.IntegerField(verbose_name="Nombre de périodes dans l'année")
 
     def __str__(self):
         return '{0} - {1}'.format(self.datedebut, self.datefin)
