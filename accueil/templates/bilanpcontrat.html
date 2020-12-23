@@ -1,5 +1,6 @@
 {% extends 'bilan_base.html' %}
 {% load i18n %}
+{% load mathfilters %}
 
 {% block titre %}
     <h4>Bilan par contrat / par année fiscale</h4>
@@ -8,14 +9,20 @@
 {% block contenuprincipal %}
 
 <div class="w3-row">
-<div class="w3-threequarter">
+<div class="w3-col.l10" style="overflow-x:auto;">
 <h2>{{ contrat.user.last_name }}, {{ contrat.user.first_name }}</h2>
     <h4>Budget # {{contrat.projet.budget}} {{contrat.projet.nomlong}} ({{contrat.projet.nomcourt}})</h4>
   <table class="w3-table-all">
-    <tr class="w3-theme-d2"><td colspan="16"><b>Totaux du contrat  #{{contrat.numcontrat}} ({{contrat.datedebut}}, {{contrat.datefin}}) </b></td>
+    <tr class="w3-theme-l4"><td colspan="5"><b>Engagements #{{contrat.numcontrat}}<br /> ({{contrat.datedebut}}, {{contrat.datefin}})</b></td>
+    <td><b>Total engagé</b></td>
+        <td><b>{{contrat.vacancesestime|addition:contrat.coutbrutestime|addition:contrat.chargesestime|floatformat:2 }}</b></td>
+    <td></td><td>Brut engagé</b></td><td>{{contrat.coutbrutestime}}</td>
+    <td>Vacances avec PE engagées</td><td>{{contrat.vacancesestime}}</td>
+    <td>PE engagé</b></td><td>{{contrat.chargesestime}}</td><td colspan="2"></td></tr>
+      <tr class="w3-theme-d2"><td colspan="16"><b>Totaux facturés du contrat  #{{contrat.numcontrat}} ({{contrat.datedebut}}, {{contrat.datefin}}) </b></td>
     </tr>
     <tr class="w3-theme-d2">
-    <td colspan="3"><b>Vacances dues ou payees <br />({{ contrat.vacancestaux|floatformat:2 }} %): {{vacances|floatformat:2}}$</b></td>
+    <td colspan="3"><b>Vacances avec PE dues ou payees <br />({{ contrat.vacancestaux|floatformat:2 }} %): {{vacances|floatformat:2}}$</b></td>
     <td colspan="2"><b>Temps facturé: {{totalheures}} heures</b></td>
     <td><b>Brut : {{totalbrut}}$</b></td>
     <td colspan="3"><b>PE réelle : {{totalcharges}}$</b></td>

@@ -73,6 +73,20 @@ def assistant_edit(request, pk):
         if contrat_formset.is_valid():
             contrat_formset.save()
             messages.success(request, "L'assistant et ses contrats ont été mis à jour.")
+            contrats = Contratippm.objects.filter(user=pk)
+            for contrat in contrats:
+                debut = contrat.datedebut.strftime("%d-%m-%Y")
+                fin = contrat.datefin.strftime("%d-%m-%Y")
+                #jourdeb, moisdeb, andeb = datedebut.split('-')
+                nbsemaines, semainedeb_rentree = calculenbsemaines(debut, fin)
+                somme_temps = decimal.Decimal(nbsemaines) * decimal.Decimal(contrat.maxheures)
+                brutperiode, partemployeur, vacances, rrq, cnes, fsst, rqap, assemploi = \
+                    calcul_salaire(contrat.tauxhoraire, somme_temps, contrat.datedebut, contrat.vacancestaux, 1)
+                contrat.coutbrutestime = brutperiode
+                contrat.vacancesestime = vacances
+                contrat.chargesestime = partemployeur
+                contrat.save()
+
             if 'Savesurplace' in request.POST:
                 return redirect(assistant_edit, assistant.id)
             else:
@@ -90,6 +104,17 @@ def assistant_edit(request, pk):
         'contrat_formset': contrat_formset,
     }
     return render(request, "assistant_edit.html", context)
+
+
+def calculenbsemaines(datedebut, datefin):
+    jourdeb, moisdeb, andeb = datedebut.split('-')
+    semainedeb_rentree = datetime.date(int(andeb), int(moisdeb), int(jourdeb))
+    jourfin, moisfin, anfin = datefin.split('-')
+    semainefin_rentree = datetime.date(int(anfin), int(moisfin), int(jourfin))
+    monday1 = (semainedeb_rentree - timedelta(days=semainedeb_rentree.weekday()))
+    monday2 = (semainefin_rentree - timedelta(days=semainefin_rentree.weekday()))
+    nbsemaines = (monday2 - monday1).days / 7
+    return nbsemaines, semainedeb_rentree
 
 
 @login_required(login_url=settings.LOGIN_URI)
@@ -259,10 +284,8 @@ def calcul_salaire(tauxhoraire, somme_temps, debutperiode, tauxvacances, eval):
         partemployeur2 = decimal.Decimal(brutperiode - exemptionrrq) * decimal.Decimal(charge.rrqtaux /100)
     else:
         partemployeur2 = 0
-    vacances1 = decimal.Decimal(brutperiode) * decimal.Decimal(decimal.Decimal(tauxvacances) /100)
     partemployeur = partemployeur1 + partemployeur2
-    # Il n'y a pas la rrq dans les vacances
-    vacances = vacances1 + (decimal.Decimal(decimal.Decimal(tauxvacances) /100) * partemployeur1)
+    vacances = (decimal.Decimal(brutperiode) + decimal.Decimal(partemployeur)) * decimal.Decimal(decimal.Decimal(tauxvacances) /100)
     rrq = partemployeur2
     return brutperiode, partemployeur, vacances, rrq, cnes, fsst, rqap, assemploi
 
@@ -499,16 +522,10 @@ def calcule_couts(request):
     if request.method == 'POST':
         datedebut = request.POST.get('datedebut')
         datefin = request.POST.get('datefin')
-        heuressemaine = request.POST.get('heuressemaine')
         tauxhoraire = request.POST.get('tauxhoraire')
         tauxvacances = request.POST.get('tauxvacances')
-        jourdeb, moisdeb, andeb = datedebut.split('-')
-        semainedeb_rentree = datetime.date(int(andeb), int(moisdeb), int(jourdeb))
-        jourfin, moisfin, anfin = datefin.split('-')
-        semainefin_rentree = datetime.date(int(anfin), int(moisfin), int(jourfin))
-        monday1 = (semainedeb_rentree - timedelta(days=semainedeb_rentree.weekday()))
-        monday2 = (semainefin_rentree - timedelta(days=semainefin_rentree.weekday()))
-        nbsemaines = (monday2 - monday1).days / 7
+        heuressemaine = request.POST.get('heuressemaine')
+        nbsemaines, semainedeb_rentree = calculenbsemaines(datedebut, datefin)
         bruth, partemployeurh, vacancesh, rrq, cnes, fsst, rqap, assemploi = calcul_salaire(decimal.Decimal(tauxhoraire),
                                                           decimal.Decimal(heuressemaine),
                                                           semainedeb_rentree,

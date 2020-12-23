@@ -49,6 +49,9 @@ class Contratippm(models.Model):
     projet = models.ForeignKey('Projet', verbose_name="Projet", on_delete=models.DO_NOTHING)
     vacancestaux = models.DecimalField(max_digits=5, decimal_places=3, verbose_name="Taux pour les vacances (%)")
     role = models.CharField(max_length=50, verbose_name="Rôle / statut", null=True, blank=True)
+    coutbrutestime = models.DecimalField(max_digits=7, decimal_places=2, verbose_name="Cout estimé brut du contrat", null=True, blank=True)
+    vacancesestime = models.DecimalField(max_digits=7, decimal_places=2, verbose_name="Cout estimé brut des vacances", null=True, blank=True)
+    chargesestime = models.DecimalField(max_digits=7, decimal_places=2, verbose_name="Cout estimé desa PE", null=True, blank=True)
 
     def __str__(self):
         return '{0} - {1}'.format(self.numcontrat, self.projet.nomcourt)

@@ -7,7 +7,7 @@
 
 {% block contenuprincipal %}
 <div class="w3-row">
-    <div class="w3-threequarter">
+    <div class="w3-col.l10" style="overflow-x:auto;">
     <h3>Bilan du projet {{projet.nomlong}} (Budget# {{projet.budget}}) </h3>
     <table class="w3-table-all">
     {% for annee in touteslesannees %}
@@ -16,7 +16,7 @@
            <td><b>{{ annee.1 }} heures</b></td>
            <td><b>{{ annee.2|floatformat:2 }}$</b></td>
            <td colspan="2"> <b>PE réelle : {{ annee.3|floatformat:2 }}$</b></td>
-           <td><b>Vacances dues ou<br /> payées : {{ annee.4|floatformat:2 }}$</b></td>
+           <td><b>Vacances  avec PE<br />dues oupayées : {{ annee.4|floatformat:2 }}$</b></td>
         </tr>
         {% for niveau in touslesniveaux %}
             {% if niveau.0 == annee.0 %}
@@ -35,7 +35,7 @@
         {% for donnee in lignes %}
             {% if donnee.4 == annee.0 %}
             <tr class="w3-small w3-theme-l4">
-            <td><br>{{donnee.1}}; {{donnee.3}}<br />{{donnee.5}}</b></td>
+            <td><b>{{donnee.1}}; {{donnee.3}}<br />{{donnee.5}}</b></td>
              <td>Periode {{ annee.0 }}</td><td>Heures</td><td>Brut</td><td>PE</td><td>PE corrigee</td><td>Vacances dues ou<br /> payées</td>
             </tr>
             {% for temp in temps %}
@@ -47,12 +47,11 @@
                         <td>{{temp.partemployeur|floatformat:2 }}</td>
                         <td>{{temp.partemployeurcorr|floatformat:2 }}</td>
                         <td>{{temp.vacances|floatformat:2 }}</td>
-                    </trw3-tiny>
+                    </tr>
                 {% endif %}
             {% endfor %}
             {% endif %}
         {% endfor %}
-        </tr>
      {% endfor %}
      </table>
 </div></div>

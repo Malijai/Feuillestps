@@ -20,7 +20,7 @@ class ContratippmForm(forms.ModelForm):
             'datedebut': 'aaaa-mm-jj',
             'datefin': 'aaaa-mm-jj',
         }
-        exclude = ()
+        exclude = ('coutbrutestime', 'vacancesestime', 'chargesestime')
 
 
 class UserForm(forms.ModelForm):

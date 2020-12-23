@@ -35,11 +35,11 @@
                <table class="w3-table-all">
                    <tr><td>Salaire Brut / semaine</td><td>{{ bruth|default:"0.0"|floatformat:2 }}$</td></tr>
                     <tr><td>PE estimee / semaine</td><td>{{ partemployeurh|default:"0.0"|floatformat:2 }}$</td></tr>
-                    <tr><td>Vacances / semaine</td><td>{{ vacancesh|default:"0.0"|floatformat:2 }}$ </td></tr>
+                    <tr><td>Vacances avec PE / semaine</td><td>{{ vacancesh|default:"0.0"|floatformat:2 }}$ </td></tr>
                     <tr class="w3-light-blue"><td>Nombre de semaines</td><td>{{ nbsemaines}}</td></tr>
                     <tr class="w3-pale-blue"><td>Salaire Brut total</td><td>{{ totalbrut|default:"0.0"|floatformat:2 }}$</td></tr>
                     <tr class="w3-light-blue"><td>Total PE estimee</td><td>{{ totalpartemployeur|default:"0.0"|floatformat:2 }}$</td></tr>
-                    <tr class="w3-pale-blue"><td>Total vacances</td><td>{{ totalvacances|default:"0.0"|floatformat:2 }}$</td></tr>
+                    <tr class="w3-pale-blue"><td>Total vacances avec PE</td><td>{{ totalvacances|default:"0.0"|floatformat:2 }}$</td></tr>
                     <tr class="w3-light-blue"><td><b>Total du contrat</b></td><td><b>{{ grandtotal|default:"0.0"|floatformat:2 }}$</b></td></tr>
                 </table>
         </div>
