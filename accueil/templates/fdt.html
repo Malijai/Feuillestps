@@ -7,8 +7,9 @@
 <form action="" method="post">
 {% csrf_token %}
     <h2>{{ user.first_name }} {{ user.last_name }} </h2>
-
+        <h3>ATTENTION... Si vous avez plusieurs contrats, vérifiez bien que vous ne dépassez pas un total de 7h de travail par jour</h3>
     <div class="w3-row w3-theme-l3 ">
+
         <div class="w3-twothird w3-center">
            <table>
                <tr>
@@ -18,7 +19,7 @@
                </tr>
                <tr>
                <td colspan="3">Choisir le projet associé à cette feuille de temps</td>
-                    <td><select name="contratid" >
+                    <td><select name="contratid">
                         <option value="">Choisir le projet / contrat</option>
                         {% for contrat in user.contratippm_set.all %}
                             <option value="{{contrat.id}}">{{contrat.numcontrat}} - {{contrat.nomcourt}}</option>
@@ -33,7 +34,7 @@
                 <tr>
                     {% for semaine in jour.semaines %}
                         <td>{{ jour.nom }}</td>
-                        <td><input type="number" value="0" min="0" max="10" step="0.5" name="{{semaine}}_{{clef}}"></td>
+                        <td><input type="number" value="0" min="0" max="7" step="0.5" name="{{semaine}}_{{clef}}"></td>
                     {% endfor %}
                 </tr>
             {% endfor %}
