@@ -6,6 +6,7 @@ from .models import Employe, Contratippm, Role, Tempsfacture, Secretaire, Period
 
 class PeriodesAdmin(admin.ModelAdmin):
     model = Periodes
+    list_display = ('periode', 'anneefiscale', 'datedebut', 'datefin')
     can_delete = False
 
 
@@ -56,7 +57,8 @@ class TempsUserAdmin(UserAdmin):
 class TempsfactureAdmin(admin.ModelAdmin):
     model = Tempsfacture
     can_delete = False
-    list_display = ('user', 'contrat', 'periode', 'brutperiode', 'partemployeur', 'partemployeurcorr')
+    list_display = ('user', 'contrat', 'bonneperiode', 'heures','brutperiode', 'contrat')
+    #list_display = ('user', 'contrat', 'periode', 'brutperiode', 'partemployeur', 'partemployeurcorr')
 
 
 class ChargesAdmin(admin.ModelAdmin):
