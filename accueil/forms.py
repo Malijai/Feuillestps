@@ -50,6 +50,11 @@ class EvaluationForm(forms.Form):
     tauxvacances = forms.DecimalField(label='% de vacances', help_text="Rentrer 4 pour 4%")
 
 
+class ListeForm(forms.Form):
+    dateentree = forms.DateField(label='Début de la période')
+
+
+
 ContratFormSet = inlineformset_factory(User, Contratippm, form= ContratippmForm,
                                          extra=2, can_delete=True)
 

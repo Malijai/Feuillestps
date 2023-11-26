@@ -4,7 +4,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.contrib import messages
 from .models import Tempsfacture, Contratippm, Role, User, Employe, Projet, Periodes, Charges, Niveau, Secretaire
-from .forms import ContratFormSet, UserForm, EmployeForm, ProjetForm, TempsForm, EvaluationForm
+from .forms import ContratFormSet, UserForm, EmployeForm, ProjetForm, TempsForm, EvaluationForm, ListeForm
 from reportlab.pdfgen.canvas import Canvas
 from django.core.files.storage import FileSystemStorage
 from reportlab.lib.utils import ImageReader
@@ -86,7 +86,6 @@ def assistant_edit(request, pk):
                 contrat.vacancesestime = vacances
                 contrat.chargesestime = partemployeur
                 contrat.save()
-
             if 'Savesurplace' in request.POST:
                 return redirect(assistant_edit, assistant.id)
             else:
@@ -502,6 +501,30 @@ def mise_a_jour_db(request, pk):
                                                     }
                                           )
     return redirect('listeassistants')
+
+
+def listecourriels(request):
+    form_class = ListeForm
+    assistants = ''
+    if request.method == 'POST':
+        dateentree = request.POST.get('dateentree')
+        if not Contratippm.objects.filter(Q(datedebut__lte= dateentree) & Q(datefin__gte= dateentree)).exists():
+            form_class = ListeForm()
+            assistants = ''
+        else:
+            contrats = Contratippm.objects.filter(Q(datedebut__lte= dateentree) & Q(datefin__gte= dateentree))
+
+            toutassistants = []
+            for contrat in contrats:
+                assistants = []
+                assistant = User.objects.get(pk=contrat.user.id)
+                assistants.append(assistant.username)
+                assistants.append(assistant.email)
+                toutassistants.append(assistants)
+    else:
+        form_class = ListeForm()
+        toutassistants = []
+    return render(request, 'listecourriels.html', {'form': form_class,'RAs':toutassistants}, )
 
 
 def calcule_couts(request):

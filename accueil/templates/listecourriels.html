@@ -1,0 +1,59 @@
+{% extends 'bilan_base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block contenuprincipal %}
+
+<div class="principal">
+{% if messages %}
+    {% for msg in messages %}
+        <div class="w3-orange" role="alert">
+        {{msg.message}}
+        </div>
+    {% endfor %}
+{% endif %}
+
+    {% block titre %}
+<h4>Liste des assistants inscrits dans le système</h4>
+{% endblock %}
+
+
+<form method="POST" class="ListeForm" >
+    <div class="w3-row">
+        <div class="w3-twothird w3-center">
+           {% csrf_token %}
+           <table class="w3-table-all">
+              {{ form.as_table }}
+           </table>
+        </div>
+    </div>
+    <button type="submit" class="w3-button w3-amber">Calculer</button>
+</form>
+
+<div class="w3-row">
+    <div class="w3-half">
+        <table class="w3-table-all">
+           <tr><th>Non, Prénom</th><th>courriel</th></tr>
+           {% for RA in RAs %}
+                <tr><td>{{ RA.0 }}</td><td>{{ RA.1 }}</td>
+                 </tr>
+                </tr>
+
+           {% endfor %}
+        </table>
+    </div>
+</div>
+    <script>
+  $(function () {
+    $('[id^=id_date]').datepicker({
+      format:'dd-mm-yyyy',
+    });
+  });
+</script>
+
+{% endblock %}
+
+{% block pied %}
+    <p>Liste des assistants inscrits dans le système</p>
+{% endblock %}
+
