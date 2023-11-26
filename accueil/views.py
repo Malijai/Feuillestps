@@ -506,14 +506,16 @@ def mise_a_jour_db(request, pk):
 def listecourriels(request):
     form_class = ListeForm
     assistants = ''
+    toutassistants = []
     if request.method == 'POST':
         dateentree = request.POST.get('dateentree')
-        if not Contratippm.objects.filter(Q(datedebut__lte= dateentree) & Q(datefin__gte= dateentree)).exists():
+        jour, mois, an = dateentree.split('-')
+        date_rentree = datetime.date(int(an), int(mois), int(jour))
+        if not Contratippm.objects.filter(Q(datedebut__lte= date_rentree) & Q(datefin__gte= date_rentree)).exists():
             form_class = ListeForm()
             assistants = ''
         else:
-            contrats = Contratippm.objects.filter(Q(datedebut__lte= dateentree) & Q(datefin__gte= dateentree))
-
+            contrats = Contratippm.objects.filter(Q(datedebut__lte= date_rentree) & Q(datefin__gte= date_rentree))
             toutassistants = []
             for contrat in contrats:
                 assistants = []
@@ -523,7 +525,7 @@ def listecourriels(request):
                 toutassistants.append(assistants)
     else:
         form_class = ListeForm()
-        toutassistants = []
+        #toutassistants = []
     return render(request, 'listecourriels.html', {'form': form_class,'RAs':toutassistants}, )
 
 
